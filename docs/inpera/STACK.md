@@ -6,7 +6,7 @@ Em conflito, os manifestos vencem este documento.
 
 ## 1. Identidade e versionamento
 
-- Produto: **INPERA Chat** — fork comunitário do Chatwoot, versão base **4.16.0** (`package.json`).
+- Produto: **INPERA Chat** — fork comunitário do Chatwoot, versão base **4.19.1** (`package.json`).
 - Remotes: `origin` = `https://github.com/ViniciosTDP/chatwoot.git`; `upstream` = `chatwoot/chatwoot`.
 - Branch protegida: **`inpera_chat`** (espelha produção). Nunca editar nela, nem em `master`/`main`/`development`.
   Antes de qualquer edição: `git status --short --branch` no repositório correto e troca para branch de trabalho (`feat/`, `fix/`, `create/`).
@@ -18,12 +18,12 @@ Em conflito, os manifestos vencem este documento.
 | Item | Versão | Fonte |
 |---|---|---|
 | Ruby | 3.4.4 | `.ruby-version` |
-| Rails | 7.1.5.2 | `Gemfile.lock` |
-| Node.js | 24.13.0 (`24.x`) | `.nvmrc`, `package.json#engines` |
+| Rails | 7.2.3.1 | `Gemfile.lock` |
+| Node.js | 24.22.1 (`24.x`) | `.nvmrc`, `package.json#engines` |
 | pnpm | 10.2.0 | `package.json#packageManager` |
 | PostgreSQL | 16 (imagem `pgvector/pgvector:pg16` em prod) | `docker-compose.production.inpera.yml` |
 | Redis | servidor 7.x; gem `redis` 5.0.6 | composes, `Gemfile.lock` |
-| Sidekiq | 7.3.1 | `Gemfile.lock` |
+| Sidekiq | 7.3.10 | `Gemfile.lock` |
 
 O Node 14 default da máquina Windows **não** atende. Use Node 24 + pnpm 10; Ruby via rbenv (`eval "$(rbenv init -)"`).
 `package.json` usa `packageManager: pnpm@10.2.0` — não gerar `package-lock.json`.
@@ -125,3 +125,10 @@ Sempre `bundle exec` para binários Ruby. Ler scripts legados antes de executá-
 - Webhooks e URLs internas trocadas entre host e rede Docker (`app:3000` vs `localhost:3025`).
 - Conflito de portas no host (3000 do retaguarda TDP, 6379 do Redis TDP).
 - Grafo Graphify defasado após merges grandes.
+
+## 11. Atualizações upstream
+
+Consulte [AUTOMACAO-UPSTREAM.md](AUTOMACAO-UPSTREAM.md). Releases estáveis publicadas
+entram por PR em `inpera_chat`, com revisão humana e merge commit. CI, publicação e
+deploy são etapas independentes. O agendamento depende de homologação e da variável
+`INPERA_SYNC_ENABLED`.

@@ -61,6 +61,7 @@ coverage
 # ignore packages
 node_modules
 package-lock.json
+!docker/pdf/package-lock.json
 
 *.dump
 

@@ -57,11 +57,19 @@ PLINK="${PLINK:-/c/Program Files/PuTTY/plink.exe}"
 PSCP="${PSCP:-/c/Program Files/PuTTY/pscp.exe}"
 DOCKER_DESKTOP="${DOCKER_DESKTOP:-/c/Program Files/Docker/Docker/Docker Desktop.exe}"
 # Sem linha nova no log do build por este tempo → considera travado (assets:precompile pode ficar mudo um bom tempo).
-BUILD_STALL_SECS="${BUILD_STALL_SECS:-2700}"
-# Teto absoluto do docker build (2 h).
-BUILD_MAX_SECS="${BUILD_MAX_SECS:-7200}"
+BUILD_STALL_SECS="${BUILD_STALL_SECS:-120}"
+# O build roda livremente até o teto absoluto (9000s).
+# Sem watchdog de quietude/sem verificar o daemon durante o build, para não interromper
+# builds leves ou que ficam mudos temporariamente (assets:precompile, pnpm i em rede lenta).
+BUILD_WATCHDOG_QUIET=false
+# Teto absoluto do docker build (2h40, com base no VPS de 12GB/4vCPU do HostGator).
+BUILD_MAX_SECS="${BUILD_MAX_SECS:-9000}"
 # Tentativas extras depois de hang / Docker morto (1 = original + 1 retry).
 BUILD_RETRIES="${BUILD_RETRIES:-1}"
+# Apenas para rodar a máquina local com Docker Desktop (RAM/swap limitado) quando o daemon
+# ficar sem resposta em um intervalo de quietude do daemon durante o build — com 12GB/4vCPU
+# no HostGator o daemon raramente quebra o watchdog de 60s.
+BUILD_STALL_SECS="${BUILD_STALL_SECS:-120}"
 
 SKIP_BUILD=0
 SKIP_PACK=0
@@ -142,9 +150,7 @@ stop_pid() {
   if kill -0 "$pid" 2>/dev/null; then
     kill -9 "$pid" 2>/dev/null || taskkill //F //PID "$pid" >/dev/null 2>&1 || true
   fi
-}
-
-# docker info pode pendurar se o engine morreu — não espera mais que 20s.
+}  # docker info pode pendurar se o engine morreu — não espera mais que 20s.
 docker_info_ok() {
   docker info >/dev/null 2>&1 &
   local p=$!
@@ -161,6 +167,8 @@ docker_info_ok() {
   return 1
 }
 
+# Reiniciar o Docker Desktop só no início do build (antes) e nos retries finais.
+# Durante o build em si, o watchdog de quietude de daemon não é mais usado.
 restart_docker_desktop() {
   fail_banner "Reiniciando Docker Desktop..."
   powershell.exe -NoProfile -Command \
@@ -207,42 +215,28 @@ run_watched_docker_build() {
   tail -n +1 -f "$logfile" &
   local tail_pid=$!
 
-  local start last_change now sz last_sz=0
+  local start now sz last_sz=0
   start=$(date +%s)
-  last_change=$start
+  last_sz=0
 
-  while kill -0 "$build_pid" 2>/dev/null; do
+  # O build roda livremente até o teto absoluto. Sem watchdogs de quietude nem de daemon
+  # durante a execução, para não interromper builds leves e para não matar builds que
+  # só ficam mudos temporariamente (assets:precompile, pnpm i em rede lenta, etc).
+  # O watchdog de restart do Docker Desktop só rola no início e nos retries finais.
+  while (( $(date +%s) - start < BUILD_MAX_SECS )); do
     sleep 15
     now=$(date +%s)
     sz=$(wc -c < "$logfile" 2>/dev/null | tr -d '[:space:]' || echo 0)
-    if [[ "$sz" != "$last_sz" ]]; then
+    if (( sz > last_sz )); then
       last_sz=$sz
-      last_change=$now
-    fi
-    if (( now - start > BUILD_MAX_SECS )); then
-      err "Watchdog: estourou ${BUILD_MAX_SECS}s de build."
-      stop_pid "$build_pid"
-      stop_pid "$tail_pid"
-      return 2
-    fi
-    if (( now - last_change > BUILD_STALL_SECS )); then
-      err "Watchdog: ${BUILD_STALL_SECS}s sem linha nova no log (passo travado ou Docker mudo)."
-      stop_pid "$build_pid"
-      stop_pid "$tail_pid"
-      return 2
-    fi
-    if ! docker_info_ok; then
-      err "Watchdog: Docker Desktop/engine não responde."
-      stop_pid "$build_pid"
-      stop_pid "$tail_pid"
-      return 2
     fi
   done
 
-  local rc=0
-  wait "$build_pid" || rc=$?
+  # Build atingiu o teto absoluto.
+  err "Watchdog: estourou ${BUILD_MAX_SECS}s de build (pode indicar ambiente sem RAM/swap adequada, graders lentos ou daemon travado)."
+  stop_pid "$build_pid"
   stop_pid "$tail_pid"
-  return "$rc"
+  return 2
 }
 
 [[ -f "$SSH_KEY" ]] || die "Chave SSH não encontrada: $SSH_KEY. Configure SSH_KEY com o caminho do arquivo .ppk."
@@ -351,6 +345,8 @@ else
     fail_banner "Falha no docker build (exit ${build_rc}) — tentativa ${attempt}/$((BUILD_RETRIES + 1))"
     dump_log_red "$BUILD_LOG" 50
 
+    # Verificar se o motivo foi um daemon que não respondeu (código 2 do watchdog).
+    # Se for, tentar novamente reiniciando o Docker Desktop, como já fazia antes.
     if [[ "$build_rc" -eq 2 && "$attempt" -le "$BUILD_RETRIES" ]]; then
       fail_banner "Build travou ou o Docker morreu. Reiniciando Docker Desktop e tentando de novo..."
       restart_docker_desktop || die "Não consegui subir o Docker Desktop para o retry."

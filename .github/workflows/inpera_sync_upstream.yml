@@ -1,193 +1,89 @@
-name: Inpera - Sync upstream Chatwoot
+name: INPERA - Sync upstream Chatwoot
 
-# Releases entram por tag (bin/sync_upstream_branches.sh). O sync semanal de
-# develop foi desativado: este workflow roda apenas por workflow_dispatch.
 on:
+  schedule:
+    - cron: '17 10 * * 1' # Segunda, 07h17 America/Sao_Paulo
   workflow_dispatch:
     inputs:
-      create_inpera_pr:
-        description: Open a PR to merge develop into inpera_chat when behind
+      tag:
+        description: 'Release publicada vX.Y.Z; vazio seleciona a maior estável'
+        type: string
+        default: ''
+      dry_run:
+        description: 'Somente consultar; sem branch, PR, issue ou Slack'
         type: boolean
         default: true
 
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  contents: read
 
-env:
-  UPSTREAM_REPO: https://github.com/chatwoot/chatwoot.git
-  DEVELOP_BRANCH: develop
-  INPERA_BRANCH: inpera_chat
+concurrency:
+  group: inpera-upstream-release
+  cancel-in-progress: false
 
 jobs:
-  sync-develop:
-    name: Sync develop from upstream
-    runs-on: ubuntu-latest
-    outputs:
-      develop_updated: ${{ steps.sync.outputs.develop_updated }}
-      develop_sha: ${{ steps.sync.outputs.develop_sha }}
+  synchronize:
+    # The schedule is deliberately gated until manual homologation is complete.
+    if: >-
+      github.repository == 'ViniciosTDP/chatwoot' && github.ref == 'refs/heads/inpera_chat' &&
+      (github.event_name == 'workflow_dispatch' || vars.INPERA_SYNC_ENABLED == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout protected automation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: inpera_chat
           fetch-depth: 0
-          ref: develop
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Add upstream remote
-        run: git remote add upstream "$UPSTREAM_REPO" || git remote set-url upstream "$UPSTREAM_REPO"
-
-      - name: Sync develop with upstream
-        id: sync
-        run: |
-          set -euo pipefail
-          git fetch upstream "$DEVELOP_BRANCH"
-          git checkout "$DEVELOP_BRANCH"
-
-          before="$(git rev-parse HEAD)"
-          if git merge "upstream/$DEVELOP_BRANCH" --ff-only; then
-            echo "Fast-forwarded develop"
-          else
-            git merge "upstream/$DEVELOP_BRANCH" -m "chore: sync develop with upstream chatwoot/chatwoot"
-          fi
-          after="$(git rev-parse HEAD)"
-
-          if [[ "$before" == "$after" ]]; then
-            echo "develop_updated=false" >> "$GITHUB_OUTPUT"
-            echo "develop is already up to date with upstream"
-          else
-            echo "develop_updated=true" >> "$GITHUB_OUTPUT"
-            git push origin "$DEVELOP_BRANCH"
-            echo "Pushed develop ($before -> $after)"
-          fi
-          echo "develop_sha=$after" >> "$GITHUB_OUTPUT"
-
-  sync-inpera-pr:
-    name: PR develop into inpera_chat
-    needs: sync-develop
-    if: github.event_name != 'workflow_dispatch' || inputs.create_inpera_pr != false
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+          persist-credentials: false
+      - name: Setup Node for trusted tooling only
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          fetch-depth: 0
-
-      - name: Configure git
+          node-version: '24'
+      - name: Preserve trusted scripts outside merge worktree
+        id: trusted
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Check if inpera_chat is behind develop
-        id: check
-        run: |
-          set -euo pipefail
-          git fetch origin "$DEVELOP_BRANCH" "$INPERA_BRANCH"
-
-          if git merge-base --is-ancestor "origin/$DEVELOP_BRANCH" "origin/$INPERA_BRANCH"; then
-            echo "behind=false" >> "$GITHUB_OUTPUT"
-            echo "inpera_chat already includes develop"
-            exit 0
-          fi
-
-          echo "behind=true" >> "$GITHUB_OUTPUT"
-          commits="$(git log --oneline "origin/$INPERA_BRANCH..origin/$DEVELOP_BRANCH" | head -20)"
-          {
-            echo "commits<<EOF"
-            echo "$commits"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Attempt merge on sync branch
-        if: steps.check.outputs.behind == 'true'
-        id: merge
-        run: |
-          set -euo pipefail
-          branch="chore/sync-${INPERA_BRANCH}-$(date -u +%Y%m%d-%H%M)"
-          echo "branch=$branch" >> "$GITHUB_OUTPUT"
-
-          git checkout -b "$branch" "origin/$INPERA_BRANCH"
-          if git merge "origin/$DEVELOP_BRANCH" -m "chore: merge develop into inpera_chat (upstream sync)"; then
-            echo "status=clean" >> "$GITHUB_OUTPUT"
-            git push origin "$branch"
-          else
-            echo "status=conflict" >> "$GITHUB_OUTPUT"
-            conflicted="$(git diff --name-only --diff-filter=U | paste -sd, -)"
-            echo "conflicted=$conflicted" >> "$GITHUB_OUTPUT"
-            git merge --abort
-          fi
-
-      - name: Open PR for clean merge
-        if: steps.check.outputs.behind == 'true' && steps.merge.outputs.status == 'clean'
+          mkdir -p "$RUNNER_TEMP/inpera-trusted"
+          cp bin/sync_upstream_branches.sh .github/scripts/inpera-release.mjs "$RUNNER_TEMP/inpera-trusted/"
+          git config user.name 'inpera-release[bot]'
+          git config user.email 'inpera-release[bot]@users.noreply.github.com'
+      - name: Create installation token scoped to this fork
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.INPERA_SYNC_APP_ID }}
+          private-key: ${{ secrets.INPERA_SYNC_APP_PRIVATE_KEY }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+          permission-workflows: write
+      - name: Authenticate Git without persisting the token
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          existing="$(gh pr list --head "${{ steps.merge.outputs.branch }}" --base "$INPERA_BRANCH" --json number --jq '.[0].number' || true)"
-          if [[ -n "$existing" && "$existing" != "null" ]]; then
-            echo "PR #$existing already exists for ${{ steps.merge.outputs.branch }}"
-            exit 0
-          fi
-
-          gh pr create \
-            --base "$INPERA_BRANCH" \
-            --head "${{ steps.merge.outputs.branch }}" \
-            --title "chore: sync inpera_chat with upstream (via develop)" \
-            --body "$(cat <<EOF
-          ## Summary
-          Automated sync from \`develop\` (upstream mirror) into \`inpera_chat\`.
-
-          Upstream develop SHA: \`${{ needs.sync-develop.outputs.develop_sha }}\`
-
-          ## Commits included
-          \`\`\`
-          ${{ steps.check.outputs.commits }}
-          \`\`\`
-
-          ## Review checklist
-          - [ ] Evolution API files intact (\`evolution_api\` provider, webhooks, services)
-          - [ ] Inpera branding preserved where applicable
-          - [ ] WhatsApp Cloud / embedded signup upstream fixes retained in shared files
-
-          ## Test plan
-          - [ ] Run Evolution specs: \`bundle exec rspec spec/services/whatsapp/**/*evolution* spec/controllers/webhooks/evolution*\`
-          - [ ] Smoke test Evolution inbox connection and message flow
-          EOF
-          )"
-
-      - name: Open issue when merge conflicts
-        if: steps.check.outputs.behind == 'true' && steps.merge.outputs.status == 'conflict'
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: gh auth setup-git
+      - name: Prepare release proposal
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          title="Manual sync required: develop -> inpera_chat ($(date -u +%Y-%m-%d))"
-          body="$(cat <<EOF
-          Automated sync could not merge \`develop\` into \`inpera_chat\` due to conflicts.
-
-          **Conflicted files:** \`${{ steps.merge.outputs.conflicted }}\`
-
-          ## Commits waiting to merge
-          \`\`\`
-          ${{ steps.check.outputs.commits }}
-          \`\`\`
-
-          ## Manual resolution
-          \`\`\`bash
-          git fetch origin
-          git checkout inpera_chat
-          git merge origin/develop
-          # resolve conflicts (keep Evolution API + Inpera branding)
-          git push origin inpera_chat
-          \`\`\`
-
-          Or run locally:
-          \`\`\`bash
-          bin/sync_upstream_branches.sh --develop
-          \`\`\`
-          EOF
-          )"
-          gh issue create --title "$title" --body "$body"
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || 'false' }}
+          INPERA_SYNC_SCRIPT: ${{ runner.temp }}/inpera-trusted/sync_upstream_branches.sh
+          INPERA_RELEASE_HELPER: ${{ runner.temp }}/inpera-trusted/inpera-release.mjs
+          INPERA_SYNC_RESULT: ${{ runner.temp }}/inpera-sync-result.json
+          INPERA_RELEASE_SLACK_WEBHOOK_URL: ${{ !inputs.dry_run && secrets.INPERA_RELEASE_SLACK_WEBHOOK_URL || '' }}
+        # Never install dependencies, run hooks from upstream, or test upstream in this job.
+        run: node "$RUNNER_TEMP/inpera-trusted/inpera-release.mjs" sync
+      - name: Notify operational failure, including App authentication
+        if: failure() && steps.trusted.outcome == 'success'
+        env:
+          INPERA_SYNC_RESULT: ${{ runner.temp }}/inpera-sync-result.json
+          INPERA_RELEASE_SLACK_WEBHOOK_URL: ${{ !inputs.dry_run && secrets.INPERA_RELEASE_SLACK_WEBHOOK_URL || '' }}
+        run: node "$RUNNER_TEMP/inpera-trusted/inpera-release.mjs" alert
+      - name: Retain sanitized result
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: inpera-sync-result
+          path: ${{ runner.temp }}/inpera-sync-result.json
+          retention-days: 30
+          if-no-files-found: warn

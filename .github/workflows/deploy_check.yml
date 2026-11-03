@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   deployment_check:
+    if: github.repository == 'chatwoot/chatwoot'
     name: Check Deployment
     runs-on: ubuntu-latest
     steps:
@@ -50,4 +51,3 @@ jobs:
           done
           echo "Deployment failed after $max_attempts attempts"
           exit  1
-          fi
