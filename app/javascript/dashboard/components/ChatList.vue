@@ -299,11 +299,15 @@ const pageTitle = computed(() => {
 function filterByAssigneeTab(conversations) {
   if (activeAssigneeTab.value === wootConstants.ASSIGNEE_TYPE.ME) {
     return conversations.filter(
-      c => c.meta?.assignee?.id === currentUser.value?.id
+      c =>
+        c.meta?.assignee_type === 'User' &&
+        c.meta?.assignee?.id === currentUser.value?.id
     );
   }
   if (activeAssigneeTab.value === wootConstants.ASSIGNEE_TYPE.UNASSIGNED) {
-    return conversations.filter(c => !c.meta?.assignee);
+    return conversations.filter(
+      c => !c.meta?.assignee && !c.meta?.assignee_agent_bot
+    );
   }
   return [...conversations];
 }
@@ -333,7 +337,7 @@ const conversationList = computed(() => {
       localConversationList = [...allChatList.value(filters)];
     }
   } else {
-    localConversationList = [...chatLists.value];
+    localConversationList = filterByAssigneeTab(chatLists.value);
   }
 
   if (activeFolder.value) {
@@ -396,6 +400,7 @@ function fetchFilteredConversations(payload) {
   store
     .dispatch('fetchFilteredConversations', {
       queryData: filterQueryGenerator(payload),
+      assigneeType: activeAssigneeTab.value,
       page,
       sortBy: activeSortBy.value,
     })
@@ -413,6 +418,7 @@ function fetchSavedFilteredConversations(payload) {
   store
     .dispatch('fetchFilteredConversations', {
       queryData: payload,
+      assigneeType: activeAssigneeTab.value,
       page,
       sortBy: activeSortBy.value,
     })
@@ -424,7 +430,10 @@ function onApplyFilter(payload) {
   payload = useSnakeCase(payload);
   showAdvancedFilters.value = false;
   store
-    .dispatch('applyConversationFilters', { filters: payload })
+    .dispatch('applyConversationFilters', {
+      filters: payload,
+      assigneeType: activeAssigneeTab.value,
+    })
     .catch(() => useAlert(t('CHAT_LIST.FETCH_ERROR')))
     .finally(emitConversationLoaded);
 }
@@ -436,6 +445,8 @@ function applyRouteFilters() {
   router.replace({ query });
   const filters = parseRouteFilters(serializedFilters);
   if (!filters) return false;
+
+  activeAssigneeTab.value = wootConstants.ASSIGNEE_TYPE.ALL;
 
   store.dispatch('setConversationFilters', filters);
   onApplyFilter(filters);
@@ -509,7 +520,7 @@ function initializeExistingFilterToModal() {
   const statusFilter = initializeStatusAndAssigneeFilterToModal(
     activeStatus.value,
     currentUserDetails.value,
-    activeAssigneeTab.value
+    wootConstants.ASSIGNEE_TYPE.ALL
   );
   // TODO: Remove the usage of useCamelCase after migrating useFilter to camelcase
   if (statusFilter) {
@@ -637,6 +648,17 @@ function updateAssigneeTab(selectedTab) {
     resetBulkActions();
     emitter.emit('clearSearchInput');
     activeAssigneeTab.value = selectedTab;
+    if (hasAppliedFiltersOrActiveFolders.value) {
+      store.dispatch('invalidateConversationListRequests');
+      store.dispatch('conversationPage/reset');
+      store.dispatch('emptyAllConversations');
+      if (hasActiveFolders.value) {
+        fetchSavedFilteredConversations(activeFolder.value.query);
+      } else {
+        fetchFilteredConversations(appliedFilters.value);
+      }
+      return;
+    }
     if (!currentPage.value) {
       fetchConversations();
     } else {
@@ -830,6 +852,9 @@ useEmitter('fetch_conversation_stats', () => {
 });
 
 onMounted(() => {
+  if (hasAppliedFiltersOrActiveFolders.value) {
+    activeAssigneeTab.value = wootConstants.ASSIGNEE_TYPE.ALL;
+  }
   store.dispatch('setChatListFilters', conversationFilters.value);
   setFiltersFromUISettings();
   store.dispatch('setChatStatusFilter', activeStatus.value);
@@ -889,6 +914,7 @@ watch(
 );
 
 watch(activeFolder, (newVal, oldVal) => {
+  activeAssigneeTab.value = wootConstants.ASSIGNEE_TYPE.ALL;
   if (newVal !== oldVal) {
     store.dispatch('customViews/setActiveConversationFolder', newVal || null);
   }
@@ -901,6 +927,10 @@ watch(chatLists, () => {
 
 // Filters can be applied from outside the list, so clear the selection here.
 watch(appliedFilters, () => resetBulkActions());
+watch(appliedContactFilter, () => {
+  activeAssigneeTab.value = wootConstants.ASSIGNEE_TYPE.ALL;
+  resetBulkActions();
+});
 </script>
 
 <template>
@@ -950,7 +980,6 @@ watch(appliedFilters, () => resetBulkActions());
     />
 
     <ChatTypeTabs
-      v-if="!hasAppliedFiltersOrActiveFolders"
       :items="assigneeTabItems"
       :active-tab="activeAssigneeTab"
       is-compact

@@ -1,9 +1,17 @@
 # Migração Chatwoot — Macromind → HostGator
 
+> **Documento histórico.** Preservado para consulta; os comandos e ambientes
+> descritos abaixo não são a rotina atual de produção. Consulte o
+> [Índice de operação vigente](../README.md) antes de executar procedimentos.
+>
+> Os comandos abaixo preservam os caminhos históricos. O instalador atual fica em
+> [script/install_nginx_ssl_inpera_chat.sh](../../../script/install_nginx_ssl_inpera_chat.sh).
+> O deploy atual usa [script/Deploy_Prod.sh](../../../script/Deploy_Prod.sh).
+
 > Os passos de migração abaixo são históricos. O script de deploy antigo citado
 > nesses passos foi removido. Para atualizações atuais, use
-> [Deploy_Prod.sh](Deploy_Prod.sh) no Git Bash do PC:
-> `cd /c/projetos-inpera/inpera-chat && bash temp/Deploy_Prod.sh`.
+> [Deploy_Prod.sh](../../../script/Deploy_Prod.sh) no Git Bash do PC:
+> `cd /c/projetos-inpera/inpera-chat && bash script/Deploy_Prod.sh`.
 
 **Status (ago/2026): concluída.** DNS `chat.inpera.com.br` aponta para `129.121.37.112`. Chatwoot, Evolution e Sidekiq rodam no HostGator via `docker-compose.production.inpera.yml`. Containers da MacroMind (`192.159.110.58`) foram **parados**.
 
@@ -178,7 +186,7 @@ No `docker-compose.production.inpera.yml` no HostGator, suba os tetos (máquina 
 
 `SERVER_URL` da Evolution já lê `EVOLUTION_API_PUBLIC_URL`.
 
-### 2.3 `temp/Deploy_Prod.sh` (já ajustado para HostGator)
+### 2.3 `script/Deploy_Prod.sh` (já ajustado para HostGator)
 
 O Macromind escutava SSH na **22** (padrão). O HostGator escuta na **22022**. Sem `-P 22022`, plink/pscp tentam a 22 e falham. Sem `-hostkey`, o modo `-batch` aborta na primeira conexão.
 
@@ -231,7 +239,7 @@ ssh_hg "gunzip -c /root/chatwoot-inpera-prod.tar.gz | docker load && rm -f /root
 
 ### Opção B — rebuild no PC
 
-Mesmo fluxo de `temp/Deploy_Prod.sh` (build + gzip), destino HostGator.
+Mesmo fluxo de `script/Deploy_Prod.sh` (build + gzip), destino HostGator.
 
 ---
 

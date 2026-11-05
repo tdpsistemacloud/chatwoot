@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Atualiza Chatwoot Inpera em produção (fluxo completo por padrão).
 #
-#   bash temp/Deploy_Prod.sh
-#   O código padrão é a pasta acima de temp/ (a raiz deste checkout).
-#   Para outra pasta: REPO_DIR=/c/caminho/do/repo bash temp/Deploy_Prod.sh
+#   bash script/Deploy_Prod.sh
+#   O código padrão é a pasta acima de script/ (a raiz deste checkout).
+#   Para outra pasta: REPO_DIR=/c/caminho/do/repo bash script/Deploy_Prod.sh
 #
 # Sem flag: build + empacotar + upload + load + backup do banco + preflight + migration + subir + health.
 # Flags só pulam etapa:
@@ -61,7 +61,6 @@ BUILD_STALL_SECS="${BUILD_STALL_SECS:-120}"
 # O build roda livremente até o teto absoluto (9000s).
 # Sem watchdog de quietude/sem verificar o daemon durante o build, para não interromper
 # builds leves ou que ficam mudos temporariamente (assets:precompile, pnpm i em rede lenta).
-BUILD_WATCHDOG_QUIET=false
 # Teto absoluto do docker build (2h40, com base no VPS de 12GB/4vCPU do HostGator).
 BUILD_MAX_SECS="${BUILD_MAX_SECS:-9000}"
 # Tentativas extras depois de hang / Docker morto (1 = original + 1 retry).
@@ -215,7 +214,7 @@ run_watched_docker_build() {
   tail -n +1 -f "$logfile" &
   local tail_pid=$!
 
-  local start now sz last_sz=0
+  local start sz last_sz=0
   start=$(date +%s)
   last_sz=0
 
@@ -225,7 +224,6 @@ run_watched_docker_build() {
   # O watchdog de restart do Docker Desktop só rola no início e nos retries finais.
   while (( $(date +%s) - start < BUILD_MAX_SECS )); do
     sleep 15
-    now=$(date +%s)
     sz=$(wc -c < "$logfile" 2>/dev/null | tr -d '[:space:]' || echo 0)
     if (( sz > last_sz )); then
       last_sz=$sz

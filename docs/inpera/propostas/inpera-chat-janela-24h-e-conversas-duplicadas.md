@@ -1,5 +1,9 @@
 # INPERA Chat (Chatwoot) — janela de 24h, falso sucesso e conversas duplicadas
 
+> **Proposta / especificação histórica.** Os pedidos e critérios de aceite
+> abaixo não comprovam implementação nem implantação. Para o fluxo de
+> atendimento atual, consulte [ciclo de conversas](../CONVERSATION-LIFECYCLE.md).
+
 Documento para o time do **INPERA Chat / Chatwoot**.  
 Origem: disparos de `inpera-mensageria` (motor de mensageria) via Account API.
 

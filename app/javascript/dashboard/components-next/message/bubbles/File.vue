@@ -15,6 +15,8 @@ const url = computed(() => {
 });
 
 const fileName = computed(() => {
+  if (attachments.value[0].fileName) return attachments.value[0].fileName;
+
   if (url.value) {
     const filename = url.value.substring(url.value.lastIndexOf('/') + 1);
     return filename || t('CONVERSATION.UNKNOWN_FILE_TYPE');

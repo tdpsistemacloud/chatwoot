@@ -219,6 +219,7 @@ watch(
       >
         <span class="ml-auto font-normal leading-4 text-xxs">
           <TimeAgo
+            :show-created-at="false"
             :last-activity-timestamp="chat.timestamp"
             :created-at-timestamp="chat.created_at"
             :conversation-id="chat.id"

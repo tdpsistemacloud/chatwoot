@@ -2,7 +2,7 @@
 # Synthetic Git repositories only; never change this project's checkout or remotes.
 set -euo pipefail
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="$ROOT/bin/sync_upstream_branches.sh"
+SCRIPT="$ROOT/script/sync_upstream_branches.sh"
 export REAL_HELPER
 REAL_HELPER=$(node -p "require('node:path').resolve(process.argv[1])" "$ROOT/.github/scripts/inpera-release.mjs")
 TASK_TEMP=$(mktemp -d)

@@ -14,6 +14,13 @@ module Api::V1::InboxesHelper
 
   private
 
+  def validate_group_greeting_setting
+    return unless params[:channel]&.key?(:greeting_enabled_for_groups)
+    return if [true, false].include?(params[:channel][:greeting_enabled_for_groups])
+
+    render_could_not_create_error('greeting_enabled_for_groups must be true or false')
+  end
+
   def validate_imap(channel_data)
     return unless channel_data.key?('imap_enabled') && channel_data[:imap_enabled]
 

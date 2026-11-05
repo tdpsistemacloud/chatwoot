@@ -55,6 +55,10 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   end
 
   def filter
+    if params.key?(:assignee_type) && %w[me unassigned all].exclude?(params[:assignee_type])
+      raise CustomExceptions::CustomFilter::InvalidValue.new(attribute_name: 'assignee_type')
+    end
+
     result = ::Conversations::FilterService.new(params.permit!, current_user, current_account).perform
     @conversations = result[:conversations]
     @conversations_count = result[:count]

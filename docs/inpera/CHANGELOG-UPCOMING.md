@@ -12,7 +12,7 @@
 >
 > ```bash
 > cd /c/projetos-inpera/inpera-chat
-> bash bin/sync_upstream_branches.sh            # pega a última tag upstream, cria release/inpera-X.Y.Z, atualiza VERSION_CW
+> bash script/sync_upstream_branches.sh            # pega a última tag upstream, cria release/inpera-X.Y.Z, atualiza VERSION_CW
 > ```
 >
 > Depois disso o agente abre a PR `release/inpera-X.Y.Z` → `inpera_chat`, roda o gate do fork e o merge fica por aprovação.
@@ -40,7 +40,7 @@ Regras de fluxo:
 
 ### 2.1 Script de sincronização
 
-- **Arquivo:** `bin/sync_upstream_branches.sh`
+- **Arquivo:** `script/sync_upstream_branches.sh`
 - **Comportamento:**
   - Sem argumento → seleciona a maior release estável publicada pela API GitHub paginada, inclusive nova major.
   - Com argumento → tag específica (formato `vX.Y.Z`).
@@ -55,11 +55,11 @@ Regras de fluxo:
     - conflito no merge deixa a branch com o merge em andamento, orientando manter Evolution API + branding INPERA.
 - **Execução:**
   ```bash
-  bash bin/sync_upstream_branches.sh
-  bash bin/sync_upstream_branches.sh v4.20.0      # tag específica
-  bash bin/sync_upstream_branches.sh --dry-run
-  bash bin/sync_upstream_branches.sh --no-push
-  bash bin/sync_upstream_branches.sh --ci --dry-run # resultado JSON, sem publicação
+  bash script/sync_upstream_branches.sh
+  bash script/sync_upstream_branches.sh v4.20.0      # tag específica
+  bash script/sync_upstream_branches.sh --dry-run
+  bash script/sync_upstream_branches.sh --no-push
+  bash script/sync_upstream_branches.sh --ci --dry-run # resultado JSON, sem publicação
   ```
 - **Status:** validado (`bash -n` ok, `--help` ok, `--dry-run` ok, tag inválida rejeitada).
 

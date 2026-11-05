@@ -89,18 +89,22 @@ class Whatsapp::IncomingMessageEvolutionService
     contact_inbox, contact = resolve_contact(jid, payload[:pushName])
     return if contact.blank? || contact.blocked?
 
-    conversation = find_or_create_conversation(contact, contact_inbox, jid)
-    message = conversation.messages.build(
-      content: extract_text(payload),
-      account_id: inbox.account_id,
-      inbox_id: inbox.id,
-      message_type: :incoming,
-      sender: contact,
-      source_id: source_id
-    )
-    attach_media(message, payload)
-    message.save!
-    message
+    contact_inbox.with_lock do
+      return if Message.exists?(source_id: source_id, inbox_id: inbox.id)
+
+      conversation = find_or_create_conversation(contact, contact_inbox, jid)
+      message = conversation.messages.build(
+        content: extract_text(payload),
+        account_id: inbox.account_id,
+        inbox_id: inbox.id,
+        message_type: :incoming,
+        sender: contact,
+        source_id: source_id
+      )
+      attach_media(message, payload)
+      message.save!
+      message
+    end
   end
 
   def create_echo_message(payload, key, source_id)
@@ -108,18 +112,23 @@ class Whatsapp::IncomingMessageEvolutionService
     contact_inbox, contact = resolve_contact(jid, nil)
     return if contact.blank?
 
-    conversation = find_or_create_conversation(contact, contact_inbox, jid)
-    message = conversation.messages.build(
-      content: extract_text(payload),
-      account_id: inbox.account_id,
-      inbox_id: inbox.id,
-      message_type: :outgoing,
-      status: :delivered,
-      source_id: source_id,
-      additional_attributes: { evolution_echo: true }
-    )
-    attach_media(message, payload)
-    message.save!
+    contact_inbox.with_lock do
+      return if Message.exists?(source_id: source_id, inbox_id: inbox.id)
+
+      conversation = find_or_create_conversation(contact, contact_inbox, jid)
+      message = conversation.messages.build(
+        content: extract_text(payload),
+        account_id: inbox.account_id,
+        inbox_id: inbox.id,
+        message_type: :outgoing,
+        status: :delivered,
+        source_id: source_id,
+        additional_attributes: { evolution_echo: true },
+        content_attributes: { external_echo: true }
+      )
+      attach_media(message, payload)
+      message.save!
+    end
   end
 
   def process_message_update
@@ -226,7 +235,7 @@ class Whatsapp::IncomingMessageEvolutionService
     end
 
     contact = find_existing_contact(identifier) || create_contact(identifier, jid, push_name)
-    contact_inbox = inbox.contact_inboxes.create!(contact: contact, source_id: identifier)
+    contact_inbox = ContactInboxBuilder.new(contact: contact, inbox: inbox, source_id: identifier).perform
     [contact_inbox, contact]
   end
 
@@ -265,17 +274,15 @@ class Whatsapp::IncomingMessageEvolutionService
   end
 
   def find_or_create_conversation(contact, contact_inbox, jid)
-    conversation = Conversation.where(inbox_id: inbox.id, contact_id: contact.id).open.order(last_activity_at: :desc).first
-    conversation ||= Conversation.find_by(inbox_id: inbox.id, contact_id: contact.id)
-    return conversation if conversation.present?
-
-    Conversation.create!(
-      account_id: inbox.account_id,
-      inbox_id: inbox.id,
-      contact_id: contact.id,
-      contact_inbox_id: contact_inbox.id,
-      additional_attributes: group_jid?(jid) ? { 'mail_subject' => contact.name, 'evolution_group' => true } : {}
-    )
+    contact_inbox.reuse_or_create_whatsapp_conversation do
+      Conversation.create!(
+        account_id: inbox.account_id,
+        inbox_id: inbox.id,
+        contact_id: contact.id,
+        contact_inbox_id: contact_inbox.id,
+        additional_attributes: group_jid?(jid) ? { 'mail_subject' => contact.name, 'evolution_group' => true } : {}
+      )
+    end
   end
 
   def contact_identifier_from_jid(jid)

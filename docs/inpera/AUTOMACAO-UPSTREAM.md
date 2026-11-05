@@ -6,7 +6,7 @@ A automação prepara uma atualização do Chatwoot para revisão. Nunca faz mer
 `inpera_chat`, resolve conflitos automaticamente, publica imagens ou executa deploy.
 O deploy local atual continua independente e incorpora `GIT_SHA`.
 
-O núcleo Git está em `bin/sync_upstream_branches.sh`. O auxiliar Node 24 em
+O núcleo Git está em `script/sync_upstream_branches.sh`. O auxiliar Node 24 em
 `.github/scripts/inpera-release.mjs` usa GitHub CLI para consultar a API, publicar
 PRs/issues e enviar Slack. Nenhuma dependência npm é necessária para esses scripts.
 
@@ -90,10 +90,10 @@ com árvore limpa, incluindo arquivos não rastreados. Não executar este script
 enquanto houver alterações de outra tarefa; nenhum stash/reset é automático.
 
 ```bash
-bash bin/sync_upstream_branches.sh --latest --dry-run
-bash bin/sync_upstream_branches.sh v5.0.0 --no-push
-bash bin/sync_upstream_branches.sh v5.0.0
-INPERA_SYNC_RESULT=/tmp/inpera-result.json bash bin/sync_upstream_branches.sh --ci --dry-run
+bash script/sync_upstream_branches.sh --latest --dry-run
+bash script/sync_upstream_branches.sh v5.0.0 --no-push
+bash script/sync_upstream_branches.sh v5.0.0
+INPERA_SYNC_RESULT=/tmp/inpera-result.json bash script/sync_upstream_branches.sh --ci --dry-run
 ```
 
 Exemplos de versão são ilustrativos. O Bash local prepara/publica somente a branch;
@@ -134,11 +134,11 @@ No CI, o merge é abortado antes de sair; nenhum marcador é commitado ou public
 Para resolver localmente, com árvore limpa:
 
 ```bash
-bash bin/sync_upstream_branches.sh v5.0.0 --no-push
+bash script/sync_upstream_branches.sh v5.0.0 --no-push
 # Resolver conflitos na release/inpera-5.0.0; preservar customizações INPERA.
 git add <arquivos-resolvidos>
 git commit
-bash bin/sync_upstream_branches.sh v5.0.0
+bash script/sync_upstream_branches.sh v5.0.0
 ```
 
 Na retomada, `VERSION_CW` é atualizado mesmo se a tag já estiver incorporada.
@@ -184,8 +184,8 @@ credenciais de teste e PostgreSQL/Redis isolados, antes do primeiro merge real.
 
 ```bash
 actionlint -shellcheck=
-shellcheck bin/sync_upstream_branches.sh .github/scripts/test-inpera-sync.sh
-bash -n bin/sync_upstream_branches.sh
+shellcheck script/sync_upstream_branches.sh .github/scripts/test-inpera-sync.sh
+bash -n script/sync_upstream_branches.sh
 node --test .github/scripts/inpera-release.test.mjs
 bash .github/scripts/test-inpera-sync.sh
 ```

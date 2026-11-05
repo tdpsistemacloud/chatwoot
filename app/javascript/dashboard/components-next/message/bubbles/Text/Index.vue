@@ -5,6 +5,7 @@ import { useMapGetter } from 'dashboard/composables/store';
 import BaseBubble from 'next/message/bubbles/Base.vue';
 import FormattedContent from './FormattedContent.vue';
 import AttachmentChips from 'next/message/chips/AttachmentChips.vue';
+import FileChip from 'next/message/chips/File.vue';
 import TranslationToggle from 'dashboard/components-next/message/TranslationToggle.vue';
 import { MESSAGE_TYPES } from '../../constants';
 import { MESSAGE_STATUS } from 'shared/constants/messages';
@@ -22,6 +23,7 @@ const {
   id,
   content,
   attachments,
+  additionalAttributes,
   contentAttributes,
   messageType,
   contactSide,
@@ -41,6 +43,22 @@ const isTranslating = computed(() => translationState.value(id.value).pending);
 
 const contentWrapper = ref(null);
 let heightBeforeChange = 0;
+
+const headerAttachments = computed(() => {
+  const header =
+    additionalAttributes.value.templateParams?.processedParams?.header;
+  return attachments.value.filter(
+    attachment =>
+      header?.mediaType?.toLowerCase() === 'document' &&
+      attachment.dataUrl === header.mediaUrl
+  );
+});
+
+const bodyAttachments = computed(() =>
+  attachments.value.filter(
+    attachment => !headerAttachments.value.includes(attachment)
+  )
+);
 
 const renderContent = computed(() => {
   if (showingOriginal.value) {
@@ -90,6 +108,14 @@ const morphHeight = () => {
 <template>
   <BaseBubble class="px-4 py-3" data-bubble-name="text">
     <div class="gap-3 flex flex-col">
+      <div v-if="headerAttachments.length" class="flex flex-col gap-2">
+        <FileChip
+          v-for="attachment in headerAttachments"
+          :key="attachment.id"
+          :attachment="attachment"
+          :truncate-name="false"
+        />
+      </div>
       <span v-if="isEmpty" class="text-n-slate-11">
         {{ $t('CONVERSATION.NO_CONTENT') }}
       </span>
@@ -139,7 +165,7 @@ const morphHeight = () => {
       >
         {{ $t('CONVERSATION.REQUEST_CONTACT_INFO.STATES.IDENTITY_CONFLICT') }}
       </span>
-      <AttachmentChips :attachments="attachments" class="gap-2" />
+      <AttachmentChips :attachments="bodyAttachments" class="gap-2" />
       <template v-if="isTemplate">
         <div
           v-if="contentAttributes.submittedEmail"

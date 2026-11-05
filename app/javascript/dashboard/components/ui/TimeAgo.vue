@@ -9,6 +9,10 @@ import { useExactTimestamp } from 'shared/composables/useExactTimestamp';
 export default {
   name: 'TimeAgo',
   props: {
+    showCreatedAt: {
+      type: Boolean,
+      default: true,
+    },
     isAutoRefreshEnabled: {
       type: Boolean,
       default: true,
@@ -60,6 +64,8 @@ export default {
   watch: {
     lastActivityTimestamp() {
       this.lastActivityAtTimeAgo = dynamicTime(this.lastActivityTimestamp);
+      clearTimeout(this.timer);
+      if (this.isAutoRefreshEnabled) this.createTimer();
     },
     createdAtTimestamp() {
       this.createdAtTimeAgo = dynamicTime(this.createdAtTimestamp);
@@ -114,6 +120,9 @@ export default {
     }"
     class="ml-auto leading-4 text-xxs text-n-slate-10 hover:text-n-slate-11"
   >
-    <span>{{ `${createdAtTime} • ${lastActivityTime}` }}</span>
+    <span v-if="showCreatedAt">{{
+      `${createdAtTime} • ${lastActivityTime}`
+    }}</span>
+    <span v-else>{{ lastActivityTime }}</span>
   </div>
 </template>

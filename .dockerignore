@@ -1,7 +1,8 @@
 .bundle
 .env
 .env.*
-!.env.production.inpera.example
+!.env.example
+!.env.*.example
 docker-compose.*
 docker/Dockerfile
 docker/dockerfiles
@@ -30,3 +31,19 @@ histoire
 agent-transcripts
 *.tar
 *.tar.gz
+
+# Local credentials and diagnostic/reference artifacts
+*.pem
+*.key
+*.p12
+*.pfx
+*.ppk
+.aws
+.claude
+.vscode
+.idea
+.nodeterm
+temp
+local
+.pnpm-store
+buildreports

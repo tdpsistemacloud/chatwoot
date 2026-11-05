@@ -2,18 +2,15 @@ class ConversationBuilder
   pattr_initialize [:params!, :contact_inbox!]
 
   def perform
+    return @contact_inbox.reuse_or_create_whatsapp_conversation { create_new_conversation } if @contact_inbox.inbox.whatsapp?
+
     look_up_exising_conversation || create_new_conversation
   end
 
   private
 
   def look_up_exising_conversation
-    return @contact_inbox.conversations.last if @contact_inbox.inbox.lock_to_single_conversation?
-
-    # WhatsApp Cloud + Evolution: never open a second thread for the same ContactInbox.
-    return unless @contact_inbox.inbox.whatsapp?
-
-    @contact_inbox.conversations.open.order(last_activity_at: :desc).first
+    @contact_inbox.conversations.last if @contact_inbox.inbox.lock_to_single_conversation?
   end
 
   def create_new_conversation

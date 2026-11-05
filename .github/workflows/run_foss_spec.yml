@@ -199,8 +199,8 @@ jobs:
       - name: Validate workflows and release automation
         run: |
           "$RUNNER_TEMP/actionlint" -shellcheck=
-          shellcheck bin/sync_upstream_branches.sh .github/scripts/test-inpera-sync.sh
-          bash -n bin/sync_upstream_branches.sh
+          shellcheck script/sync_upstream_branches.sh .github/scripts/test-inpera-sync.sh
+          bash -n script/sync_upstream_branches.sh
           node --test .github/scripts/inpera-release.test.mjs
           bash .github/scripts/test-inpera-sync.sh
 

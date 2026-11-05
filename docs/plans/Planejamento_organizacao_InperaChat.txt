@@ -1,0 +1,59 @@
+A previous agent produced the plan below to accomplish the user's task. Implement the plan in a fresh context. Treat the plan as the source of user intent, re-read files as needed, and carry the work through implementation and verification.
+
+# Organização e validação do INPERA Chat
+
+## Direção da organização
+
+Manter a arquitetura convencional do Rails e reduzir arquivos dispersos sem quebrar ferramentas, deploys ou funcionalidades existentes.
+
+- Manter na raiz `.env`, templates de ambiente, manifests, lockfiles, arquivos de versão e configurações que as ferramentas procuram nesse local. Não criar uma pasta de credenciais.
+- Concentrar scripts shell operacionais em `script/`, utilitários Ruby em `tools/` e executáveis convencionais em `bin/`.
+- Continuar no checkout único e na branch `fix/inbox-timezone-working-hours`, preservando todas as alterações pendentes.
+- Não realizar commit, push, integração ou deploy nesta etapa.
+
+## Organização e remoção de arquivos
+
+- Consolidar a migração existente de documentação e ferramentas Ruby, conferindo destinos, referências e preservação do comportamento.
+- Mover os scripts de instalação Nginx/SSL e sincronização upstream de `bin/` para `script/`. Atualizar documentação operacional, testes, workflows e mensagens geradas que utilizam os caminhos antigos.
+- Manter em `bin/` os launchers do Rails, Vite, instalação, atualização, traduções e validação de push. Manter auxiliares exclusivos do GitHub Actions em `.github/scripts/`.
+- Corrigir os exemplos de `Deploy_Prod.sh` que ainda apontam para `temp/`. Preservar comandos históricos como registro, acrescentando a indicação do caminho atual.
+- Criar um inventário de organização com a classificação, finalidade e evidência para arquivos mantidos, movidos ou removidos.
+
+A remoção seguirá estes critérios:
+
+- Excluir somente arquivos comprovadamente abandonados após verificar referências, carregamento implícito, empacotamento, testes e documentação.
+- Ausência de resultados no `rg` não será suficiente para declarar um arquivo órfão.
+- Preservar configurações de CI, plataformas e ferramentas cujo uso externo não esteja comprovadamente encerrado.
+- Revisar as exclusões pendentes em `temp/` antes de incluí-las na entrega, principalmente referências relacionadas aos relatórios PDF.
+- Restaurar o marcador convencional `log/.keep`, preservando a criação do diretório sem versionar logs.
+- Manter a ferramenta legada de reindexação documentada e sem execução; corrigir seu comportamento fica fora desta organização.
+
+## Versionamento seguro
+
+- Revisar `.gitignore` e `.dockerignore` para excluir ambientes locais, credenciais, logs, diagnósticos e artefatos gerados, mantendo os templates necessários. Remover a regra que ignora o próprio `.gitattributes`.
+- Manter finais de linha LF nos scripts Linux, evitando uma normalização geral dos arquivos pendentes.
+- Ajustar os hooks para usar `pnpm`, propagar falhas e validar os arquivos preparados sem executar `git add` indiscriminadamente nem ocultar erros do RuboCop.
+- Ampliar a proteção local de push para todas as branches protegidas definidas no `AGENTS.md`.
+- Revisar os arquivos candidatos ao versionamento em busca de segredos, sem imprimir seus valores nem reescrever o histórico Git.
+
+Preparar a entrega em grupos revisáveis: funcionalidades e testes; documentação e movimentações; higiene e hooks. As alterações anteriores da automação upstream permanecerão identificadas separadamente; ajustes de caminho serão pontuais, preservando sua lógica pendente.
+
+## Fechamento da validação
+
+Usar os runtimes dos manifests, com `pnpm` e `bundle exec`. Executar testes em ambiente isolado, com PostgreSQL, Redis e storage próprios. Definir explicitamente `POSTGRES_DATABASE`, pois apenas `RAILS_ENV=test` não garante isolamento neste projeto.
+
+- **Tempos:** corrigir a comparação de espaços no teste de `TimeAgo`, sem alterar o produto para satisfazer a asserção. Validar os dois cartões, tooltip, atualização por atividade e descarte dos timers.
+- **Filtros:** validar abas, agrupamentos AND/OR, contadores, bots atribuídos, permissões, pastas, histórico, paginação acima de 25 resultados, cancelamento e atualizações em tempo real.
+- **WhatsApp:** validar reutilização por identidade, aberta/pendente/adiada, criação após resolução, grupos, bots, reentrega e concorrência entre API e recebimento.
+- **Anexos e saudação:** validar documentos em mensagens históricas e novas, nome e download no header, atributos retornados pela API, preferência de grupos e idioma selecionado.
+- **Compatibilidade:** conferir as extensões Enterprise e executar smoke tests de Evolution, Cloud e exportação PDF/CSV em ambiente de teste.
+
+Executar Vitest e RSpec direcionados, ESLint, RuboCop, verificação de links, `bash -n`, ShellCheck e validação dos workflows alterados. Testar a sincronização upstream com os testes existentes e dependências simuladas, sem sincronizar ou publicar branches reais.
+
+Concluir com build de produção, revisão do contexto Docker, `git diff --check` e `graphify update .`. Corrigir falhas atribuíveis às alterações pendentes; registrar separadamente impedimentos de infraestrutura e problemas preexistentes, sem apresentá-los como aprovados.
+
+## Critérios de conclusão
+
+A entrega estará pronta para revisão quando os caminhos estiverem consistentes, as remoções tiverem evidência registrada, os arquivos locais estiverem preservados e as verificações exigidas tiverem resultado documentado.
+
+O relatório final apresentará mudanças, testes executados, bloqueios e agrupamento sugerido para commits. A instabilidade específica da instância Evolution do cliente continuará como incidente separado; esta reorganização não será apresentada como solução para ela.

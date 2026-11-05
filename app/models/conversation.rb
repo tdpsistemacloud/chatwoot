@@ -233,6 +233,14 @@ class Conversation < ApplicationRecord
     ai_assignee || assignee
   end
 
+  def whatsapp_group?
+    inbox.whatsapp? && inbox.channel.provider == 'evolution_api' && contact_inbox.source_id.start_with?('EV.')
+  end
+
+  def greeting_allowed?
+    !whatsapp_group? || inbox.channel.greeting_enabled_for_groups
+  end
+
   def tweet?
     inbox.inbox_type == 'Twitter' && additional_attributes['type'] == 'tweet'
   end

@@ -1,0 +1,7 @@
+graphify-out/graph.json merge=graphify
+
+# Shell scripts deployed to Linux VPS must keep LF endings (avoid bash\r on shebang)
+*.sh text eol=lf
+
+.husky/pre-* text eol=lf
+bin/validate_push text eol=lf

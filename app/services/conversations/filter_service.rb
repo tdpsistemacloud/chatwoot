@@ -11,6 +11,8 @@ class Conversations::FilterService < FilterService
     @conversations = query_builder(@filters['conversations'])
     mine_count, unassigned_count, all_count, = set_count_for_all_conversations
     assigned_count = all_count - unassigned_count
+    @conversations = @conversations.where(assignee_id: @user.id) if @params[:assignee_type] == 'me'
+    @conversations = @conversations.unassigned if @params[:assignee_type] == 'unassigned'
 
     {
       conversations: conversations,

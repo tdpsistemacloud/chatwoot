@@ -32,11 +32,11 @@ PDF_SERVICE_URL=http://pdf:3005
 ```
 
 Gere o token com `openssl rand -hex 32`. Não versionar credenciais.
-O script `temp/Deploy_Prod.sh` foi adaptado para construir/empacotar as duas imagens, enviar o Compose, executar migrations e iniciar PDF e report-worker.
+O script `script/Deploy_Prod.sh` foi adaptado para construir/empacotar as duas imagens, enviar o Compose, executar migrations e iniciar PDF e report-worker.
 No Git Bash, o script usa o checkout único por padrão:
 
 ```bash
-bash /c/projetos-inpera/inpera-chat/temp/Deploy_Prod.sh
+bash /c/projetos-inpera/inpera-chat/script/Deploy_Prod.sh
 ```
 
 `--skip-build` exige ambas as imagens já construídas; `--skip-pack` exige um pacote contendo ambas.

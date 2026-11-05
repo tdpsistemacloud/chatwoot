@@ -165,6 +165,7 @@ export const mutations = {
     const [chat] = _state.allConversations.filter(c => c.id === conversationId);
     if (chat) {
       chat.last_activity_at = lastActivityAt;
+      chat.timestamp = lastActivityAt;
     }
   },
   [types.ASSIGN_PRIORITY](_state, { priority, conversationId }) {
@@ -257,6 +258,7 @@ export const mutations = {
     } else {
       chat.messages.push(message);
       chat.timestamp = message.created_at;
+      chat.last_activity_at = message.created_at;
       const { conversation: { unread_count: unreadCount = 0 } = {} } = message;
       chat.unread_count = unreadCount;
       if (selectedChatId === conversationId) {

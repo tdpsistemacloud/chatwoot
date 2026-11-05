@@ -8,6 +8,7 @@ json.content_type message.content_type
 json.status message.status
 json.external_error message.external_error
 json.content_attributes message.content_attributes
+json.additional_attributes message.additional_attributes
 json.created_at message.created_at.to_i
 json.private message.private
 json.source_id message.source_id

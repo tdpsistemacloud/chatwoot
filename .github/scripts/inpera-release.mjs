@@ -151,7 +151,7 @@ export async function synchronize({ request = api, runSync } = {}) {
         i => !i.pull_request && i.body?.includes(marker(result.tag))
       );
       if (result.status === 'conflict') {
-        const body = `${marker(result.tag)}\nRelease ${result.tag}, upstream SHA: \`${result.upstream_sha}\`.\n\nArquivos em conflito:\n${result.conflicts.map(f => `- \`${f.replaceAll('`', '')}\``).join('\n')}\n\nEm uma árvore limpa, fora de branches protegidas:\n\n\`\`\`bash\nbash bin/sync_upstream_branches.sh ${result.tag} --no-push\n# Resolver os arquivos preservando Evolution, WhatsApp Cloud, branding e PDF/CSV.\ngit add <arquivos>\ngit commit\nbash bin/sync_upstream_branches.sh ${result.tag}\n\`\`\`\n\nReexecute o workflow com a mesma tag. VERSION_CW será atualizado também na retomada.\nConsulte docs/inpera/AUTOMACAO-UPSTREAM.md. Não faça merge diretamente em inpera_chat.`;
+        const body = `${marker(result.tag)}\nRelease ${result.tag}, upstream SHA: \`${result.upstream_sha}\`.\n\nArquivos em conflito:\n${result.conflicts.map(f => `- \`${f.replaceAll('`', '')}\``).join('\n')}\n\nEm uma árvore limpa, fora de branches protegidas:\n\n\`\`\`bash\nbash script/sync_upstream_branches.sh ${result.tag} --no-push\n# Resolver os arquivos preservando Evolution, WhatsApp Cloud, branding e PDF/CSV.\ngit add <arquivos>\ngit commit\nbash script/sync_upstream_branches.sh ${result.tag}\n\`\`\`\n\nReexecute o workflow com a mesma tag. VERSION_CW será atualizado também na retomada.\nConsulte docs/inpera/AUTOMACAO-UPSTREAM.md. Não faça merge diretamente em inpera_chat.`;
         if (issue) {
           if (issue.body !== body || issue.state !== 'open')
             request(`repos/${repo}/issues/${issue.number}`, 'PATCH', {

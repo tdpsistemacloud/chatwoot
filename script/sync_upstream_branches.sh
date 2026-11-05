@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sync published stable Chatwoot releases into a review branch, never production.
-# Usage: bash bin/sync_upstream_branches.sh [vX.Y.Z|--latest] [--dry-run] [--no-push] [--ci]
+# Usage: bash script/sync_upstream_branches.sh [vX.Y.Z|--latest] [--dry-run] [--no-push] [--ci]
 # Requires Bash, Git, Node 24 and authenticated GitHub CLI (gh).
 set -euo pipefail
 

@@ -2,7 +2,7 @@
 
 Documentação para as equipes de **Backend** e **Frontend** do Inpera implementarem notificações em tempo real quando chega uma nova mensagem no INPERA Chat.
 
-Complementa: [`platform-api-provisionamento-conta-admin.md`](./platform-api-provisionamento-conta-admin.md)
+Complementa: [`platform-api-provisionamento-conta-admin.md`](../api/platform-api-provisionamento-conta-admin.md)
 
 ---
 
@@ -163,7 +163,7 @@ inbox_updated
       "url": "https://api.tdp.com.br/webhooks/inpera-chat",
       "account_id": 2,
       "subscriptions": ["message_created"],
-      "secret": "a1b2c3d4e5f6..."
+      "secret": "<TOKEN_EXEMPLO>"
     }
   }
 }
@@ -633,10 +633,10 @@ Para teste end-to-end, envie uma mensagem real para um inbox da conta provisiona
 
 > O container Rails usa `EVOLUTION_WEBHOOK_BASE_URL=http://app:3000` (rede Docker interna) — essa variável **não muda** com a troca de porta do host.
 
-Guia completo: [`chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md`](../chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md)
+Guia completo: [`chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md`](../DEV-LOCAL-PORTA-3025.md)
 
 ---
 
 ## Documentos relacionados
 
-- [`platform-api-provisionamento-conta-admin.md`](./platform-api-provisionamento-conta-admin.md) — Etapas 1–3 (usuário, conta, administrator)
+- [`platform-api-provisionamento-conta-admin.md`](../api/platform-api-provisionamento-conta-admin.md) — Etapas 1–3 (usuário, conta, administrator)

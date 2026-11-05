@@ -4,8 +4,8 @@ Referência consolidada das rotas HTTP expostas pelo **INPERA Chat** (Chatwoot s
 
 Documentos relacionados:
 
-- [Provisionamento Platform API](./platform-api-provisionamento-conta-admin.md) — criar usuário, conta e administrator
-- [CRUD detalhado (Evolution + mensagens)](./rotas-crud-usuarios-contas-evolution-mensagens.md) — payloads completos, erros e exemplos cURL
+- [Provisionamento Platform API](platform-api-provisionamento-conta-admin.md) — criar usuário, conta e administrator
+- [CRUD detalhado (Evolution + mensagens)](rotas-crud-usuarios-contas-evolution-mensagens.md) — payloads completos, erros e exemplos cURL
 
 ---
 
@@ -67,7 +67,7 @@ Base: `{BASE_URL}/platform/api/v1`
 | `POST` | `/agent_bots` | Criar agent bot |
 | `GET/PATCH/DELETE` | `/agent_bots/:id` | CRUD agent bot |
 
-Detalhes e exemplos: [platform-api-provisionamento-conta-admin.md](./platform-api-provisionamento-conta-admin.md).
+Detalhes e exemplos: [platform-api-provisionamento-conta-admin.md](platform-api-provisionamento-conta-admin.md).
 
 ---
 
@@ -252,7 +252,7 @@ Códigos em `content_attributes.external_error`:
 | `EVOLUTION_BANNED` | Número banido / forbidden |
 | `EVOLUTION_UNAVAILABLE` | Timeout / Evolution fora |
 
-Payloads completos: [rotas-crud-usuarios-contas-evolution-mensagens.md](./rotas-crud-usuarios-contas-evolution-mensagens.md) (seções 5–6).
+Payloads completos: [rotas-crud-usuarios-contas-evolution-mensagens.md](rotas-crud-usuarios-contas-evolution-mensagens.md) (seções 5–6).
 
 ---
 
@@ -333,4 +333,4 @@ Referência: `chatwoot/.env.production.inpera.example`, `docker-compose.producti
 | `chatwoot/app/controllers/webhooks/evolution_controller.rb` | Webhook Evolution |
 | `chatwoot/app/controllers/api/v1/accounts/inboxes/evolution_controller.rb` | status / reconnect |
 | `chatwoot/swagger/swagger.json` | OpenAPI |
-| `temp/Deploy_Prod.sh` | Deploy Hostgator |
+| `script/Deploy_Prod.sh` | Deploy Hostgator |

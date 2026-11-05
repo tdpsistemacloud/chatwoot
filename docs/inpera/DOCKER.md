@@ -72,7 +72,7 @@ no servidor. A imagem customizada `chatwoot-inpera:prod` precisa estar disponív
 antes do deploy; esse Compose não faz o build da imagem.
 
 O arquivo de produção permanece com o mesmo nome porque é usado por
-`temp/Deploy_Prod.sh` e `bin/install_nginx_ssl_inpera_chat.sh`. Ele contém
+`script/Deploy_Prod.sh` e `script/install_nginx_ssl_inpera_chat.sh`. Ele contém
 limites de memória para o ambiente Inpera e não substitui o Compose local.
 
 O template `.env.example` permanece como catálogo geral das variáveis do Chatwoot.

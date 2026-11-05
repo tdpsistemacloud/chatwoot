@@ -1,5 +1,9 @@
 {
   "INBOX_MGMT": {
+    "GROUP_GREETING": {
+      "LABEL": "Enviar mensagens de saudação para grupos do WhatsApp",
+      "DESCRIPTION": "Permite enviar a saudação da caixa de entrada para grupos do WhatsApp via Evolution. Desativado por padrão. A saudação geral também precisa estar ativada; conversas individuais não são afetadas."
+    },
     "HEADER": "Caixas de Entrada",
     "DESCRIPTION": "Um canal é o modo de comunicação que seu cliente escolhe para interagir com você. Uma caixa de entrada é onde você gerencia interações para um canal específico. Pode incluir comunicações de várias fontes, como e-mail, chat ao vivo e mídia social.",
     "LEARN_MORE": "Saiba mais sobre as caixas de entrada",

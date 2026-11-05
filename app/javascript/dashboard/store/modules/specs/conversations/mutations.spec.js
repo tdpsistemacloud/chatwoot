@@ -57,7 +57,12 @@ describe('#mutations', () => {
       });
 
       expect(state.allConversations).toEqual([
-        { id: 1, meta: {}, last_activity_at: 1602256198 },
+        {
+          id: 1,
+          meta: {},
+          last_activity_at: 1602256198,
+          timestamp: 1602256198,
+        },
       ]);
     });
   });
@@ -139,6 +144,7 @@ describe('#mutations', () => {
           ],
           unread_count: 0,
           timestamp: 1602256198,
+          last_activity_at: 1602256198,
         },
       ]);
       expect(emitter.emit).not.toHaveBeenCalled();
@@ -167,6 +173,7 @@ describe('#mutations', () => {
           ],
           unread_count: 0,
           timestamp: 1602256198,
+          last_activity_at: 1602256198,
         },
       ]);
       expect(emitter.emit).toHaveBeenCalledWith('SCROLL_TO_MESSAGE');

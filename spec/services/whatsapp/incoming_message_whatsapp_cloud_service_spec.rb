@@ -532,7 +532,7 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
           expect(conversation_b.contact_inbox).to eq(contact_inbox_b)
         end
 
-        it 'reopens only the exact identity conversation when conversation locking is enabled' do
+        it 'preserves resolved history and creates a conversation per identity even when conversation locking is enabled' do
           whatsapp_channel.inbox.update!(lock_to_single_conversation: true)
           conversation_a.update!(status: :resolved)
           conversation_b.update!(status: :resolved)
@@ -540,9 +540,11 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
           described_class.new(inbox: whatsapp_channel.inbox, params: customer_a_params).perform
           described_class.new(inbox: whatsapp_channel.inbox, params: customer_b_params).perform
 
-          expect(whatsapp_channel.inbox.conversations.count).to eq(2)
-          expect(conversation_a.reload).to have_attributes(status: 'open', contact_inbox: contact_inbox_a)
-          expect(conversation_b.reload).to have_attributes(status: 'open', contact_inbox: contact_inbox_b)
+          expect(whatsapp_channel.inbox.conversations.count).to eq(4)
+          expect(conversation_a.reload).to have_attributes(status: 'resolved', contact_inbox: contact_inbox_a)
+          expect(conversation_b.reload).to have_attributes(status: 'resolved', contact_inbox: contact_inbox_b)
+          expect(contact_inbox_a.conversations.open.sole.messages.last.content).to eq('message from customer A')
+          expect(contact_inbox_b.conversations.open.sole.messages.last.content).to eq('message from customer B')
         end
 
         it 'creates a new conversation for each exact identity when conversation locking is disabled' do

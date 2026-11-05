@@ -1,12 +1,12 @@
 # Reindex messages for a single account
-# Usage: bundle exec rails runner script/reindex_single_account.rb ACCOUNT_ID [DAYS_BACK]
+# Usage: bundle exec rails runner tools/legacy/reindex_single_account.rb ACCOUNT_ID [DAYS_BACK]
 
 #account_id = ARGV[0]&.to_i
 days_back = (ARGV[1] || 30).to_i
 
 # if account_id.nil? || account_id.zero?
-#   puts "Usage: bundle exec rails runner script/reindex_single_account.rb ACCOUNT_ID [DAYS_BACK]"
-#   puts "Example: bundle exec rails runner script/reindex_single_account.rb 93293 30"
+#   puts "Usage: bundle exec rails runner tools/legacy/reindex_single_account.rb ACCOUNT_ID [DAYS_BACK]"
+#   puts "Example: bundle exec rails runner tools/legacy/reindex_single_account.rb 93293 30"
 #   exit 1
 # end
 

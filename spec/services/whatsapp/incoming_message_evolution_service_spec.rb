@@ -6,11 +6,36 @@ describe Whatsapp::IncomingMessageEvolutionService do
   end
   let(:inbox) { whatsapp_channel.inbox }
 
-  before do
-    stub_const('ENV', ENV.to_hash.merge('EVOLUTION_API_URL' => '', 'EVOLUTION_API_KEY' => ''))
+  around do |example|
+    with_modified_env('EVOLUTION_API_URL' => '', 'EVOLUTION_API_KEY' => '') { example.run }
   end
 
   describe '#perform' do
+    it 'deduplicates redelivery while reusing unresolved conversations and preserving resolved history' do
+      params = {
+        event: 'messages.upsert',
+        data: {
+          key: { remoteJid: '5511888777666@s.whatsapp.net', fromMe: false, id: 'EVO_REDELIVERY' },
+          pushName: 'Alice', message: { conversation: 'Hello' }
+        }
+      }
+      described_class.new(inbox: inbox, params: params).perform
+      conversation = inbox.conversations.sole
+      conversation.update!(status: :pending)
+
+      expect { described_class.new(inbox: inbox, params: params).perform }.not_to change(Message, :count)
+      params[:data][:key][:id] = 'EVO_PENDING'
+      described_class.new(inbox: inbox, params: params).perform
+      expect(inbox.conversations.sole.id).to eq(conversation.id)
+
+      conversation.update!(status: :resolved)
+      params[:data][:key][:id] = 'EVO_AFTER_RESOLUTION'
+      described_class.new(inbox: inbox, params: params).perform
+      expect(inbox.conversations.count).to eq(2)
+      expect(conversation.reload).to be_resolved
+      expect(inbox.messages.find_by!(source_id: 'EVO_AFTER_RESOLUTION').conversation_id).not_to eq(conversation.id)
+    end
+
     it 'creates an incoming message from MESSAGES_UPSERT' do
       params = {
         event: 'messages.upsert',

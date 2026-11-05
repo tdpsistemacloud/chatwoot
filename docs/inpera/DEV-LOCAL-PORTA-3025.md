@@ -51,7 +51,7 @@ Docker network (interno)
 | Redis do Backend TDP | `:6379` no host | Continua exclusivo do Retaguarda; Chatwoot local usa `:6380` no host |
 | `docker-compose.production.inpera.yml` | `3000:3000` | Produção fica atrás de Nginx/SSL, sem mudança |
 | `.env.production.inpera.example` | `FRONTEND_URL=https://chat.inpera.com.br` | Mantido para referência de produção |
-| `bin/install_nginx_ssl_inpera_chat.sh` (`UPSTREAM_PORT=3000`) | `3000` | Nginx aponta para o container, não para o host |
+| `script/install_nginx_ssl_inpera_chat.sh` (`UPSTREAM_PORT=3000`) | `3000` | Nginx aponta para o container, não para o host |
 | `tests/playwright/.env.example` | `BASE_URL=http://localhost:3000` | E2E corre dentro da rede Docker, não passa pelo mapeamento do host |
 | `Dockerfile` → `EXPOSE 3000` | `3000` | Porta interna do Rails; não muda |
 
@@ -141,8 +141,8 @@ docker compose -f docker-compose.local.yml up -d
 
 ## Documentos relacionados
 
-- [`temp/webhook-notificacoes-inpera-chat.md`](../../temp/webhook-notificacoes-inpera-chat.md) — fluxo de webhooks Chatwoot → Backend TDP
-- [`temp/platform-api-provisionamento-conta-admin.md`](../../temp/platform-api-provisionamento-conta-admin.md) — provisionamento Platform API
-- [`temp/snippet-widget-chatwoot-front-retaguarda.md`](../../temp/snippet-widget-chatwoot-front-retaguarda.md) — Website Widget vs integração operador
-- [`tdpcloud-backend-node/.cursor/docs/INPERA-CHAT-DEV-LOCAL-PORTA-3025.md`](../../../../tdpcloud-backend-node/.cursor/docs/INPERA-CHAT-DEV-LOCAL-PORTA-3025.md) — guia do backend TDP para DEV local
-- [`tdpcloud-frontend-react/.cursor/docs/INPERA-CHAT-DEV-LOCAL-PORTA-3025.md`](../../../../tdpcloud-frontend-react/.cursor/docs/INPERA-CHAT-DEV-LOCAL-PORTA-3025.md) — guia do frontend para DEV local
+- [`docs/inpera/integracoes/webhook-notificacoes-inpera-chat.md`](integracoes/webhook-notificacoes-inpera-chat.md) — fluxo de webhooks Chatwoot → Backend TDP
+- [`docs/inpera/api/platform-api-provisionamento-conta-admin.md`](api/platform-api-provisionamento-conta-admin.md) — provisionamento Platform API
+- [`docs/inpera/integracoes/snippet-widget-chatwoot-front-retaguarda.md`](integracoes/snippet-widget-chatwoot-front-retaguarda.md) — Website Widget vs integração operador
+- [`tdpcloud-backend-node/.cursor/docs/INPERA-CHAT-DEV-LOCAL-PORTA-3025.md`](../../../tdpcloud-backend-node/.cursor/docs/INPERA-CHAT-DEV-LOCAL-PORTA-3025.md) — guia do backend TDP para DEV local
+- [`tdpcloud-frontend-react/.cursor/docs/INPERA-CHAT-DEV-LOCAL-PORTA-3025.md`](../../../tdpcloud-frontend-react/.cursor/docs/INPERA-CHAT-DEV-LOCAL-PORTA-3025.md) — guia do frontend para DEV local

@@ -8,8 +8,8 @@
 #   - Ports 80 and 443 open in the VM firewall / security group
 #
 # Usage:
-#   sudo CERTBOT_EMAIL="bruno@tdp.com.br,tdp@tdp.com.br" ./bin/install_nginx_ssl_inpera_chat.sh
-#   sudo ./bin/install_nginx_ssl_inpera_chat.sh --domain chat.inpera.com.br --email "bruno@tdp.com.br,tdp@tdp.com.br"
+#   sudo CERTBOT_EMAIL="bruno@tdp.com.br,tdp@tdp.com.br" ./script/install_nginx_ssl_inpera_chat.sh
+#   sudo ./script/install_nginx_ssl_inpera_chat.sh --domain chat.inpera.com.br --email "bruno@tdp.com.br,tdp@tdp.com.br"
 #
 set -euo pipefail
 
@@ -46,8 +46,8 @@ Options:
 
 Examples:
   sudo CERTBOT_EMAIL="bruno@tdp.com.br,tdp@tdp.com.br" \
-    ./bin/install_nginx_ssl_inpera_chat.sh
-  sudo ./bin/install_nginx_ssl_inpera_chat.sh \
+    ./script/install_nginx_ssl_inpera_chat.sh
+  sudo ./script/install_nginx_ssl_inpera_chat.sh \
     -d chat.inpera.com.br \
     -e "bruno@tdp.com.br,tdp@tdp.com.br"
 EOF
@@ -131,7 +131,7 @@ write_nginx_config() {
   mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
 
   cat >"$NGINX_AVAILABLE" <<EOF
-# INPERA Chat — managed by bin/install_nginx_ssl_inpera_chat.sh
+# INPERA Chat — managed by script/install_nginx_ssl_inpera_chat.sh
 # Domain: ${DOMAIN}
 # Upstream: http://${UPSTREAM}
 

@@ -1,8 +1,12 @@
 # Deploy produção — Chatwoot Inpera
 
+> **Documento histórico.** Preservado para consulta; os comandos e ambientes
+> descritos abaixo não são a rotina atual de produção. Consulte o
+> [Índice de operação vigente](../README.md) antes de executar procedimentos.
+
 > Documento histórico do ambiente Macromind. O script de deploy antigo citado
 > abaixo foi removido. Para atualizar a produção atual no HostGator, execute no
-> Git Bash do PC: `cd /c/projetos-inpera/inpera-chat && bash temp/Deploy_Prod.sh`.
+> Git Bash do PC: `cd /c/projetos-inpera/inpera-chat && bash script/Deploy_Prod.sh`.
 > Consulte [a migração para HostGator](migracao-macromind-hostgator.md).
 
 Guia dos comandos usados pelos agentes para subir/atualizar o Chatwoot Inpera no VPS de produção/homolog.
@@ -376,5 +380,5 @@ docker-compose -f docker-compose.production.inpera.yml exec -T rails \
 4. Postgres/Redis só escutam em `127.0.0.1` no host — acesso externo só via túnel SSH.
 5. Após update de frontend, faça hard refresh / limpe cache do browser (assets versionados na imagem).
 6. Se o build local travar, mate processos `docker build`/`buildkit` e rode de novo; use `.dockerignore` enxuto (já inclui `graphify-out`, `.git`, `spec`, etc.).
-7. **HTTPS / domínio** — ver `temp/nginx-ssl-chatwoot-vm-inpera.md` e script `bin/install_nginx_ssl_inpera_chat.sh` (Nginx + Let's Encrypt em `chat.inpera.com.br`).
+7. **HTTPS / domínio** — ver `docs/inpera/historico/nginx-ssl-chatwoot-vm-inpera.md` e script `script/install_nginx_ssl_inpera_chat.sh` (Nginx + Let's Encrypt em `chat.inpera.com.br`).
 8. **Evolution + FORCE_SSL** — com `FORCE_SSL=true`, `EVOLUTION_WEBHOOK_BASE_URL` deve ser `https://chat.inpera.com.br` (não `http://rails:3000`). Senão a Evolution segue redirect HTTPS e as mensagens não chegam (EPROTO). Após alterar `.env`, use `up -d --force-recreate` (não só `restart`) e reconfigure os webhooks das instâncias (`/webhook/set/<instance>`).

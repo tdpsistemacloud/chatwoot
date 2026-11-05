@@ -39,6 +39,8 @@ class MessageTemplates::HookExecutionService
   end
 
   def should_send_greeting?
+    return false unless conversation.greeting_allowed?
+
     return false if conversation.campaign.present?
     # should not send if its a tweet message
     return false if conversation.tweet?

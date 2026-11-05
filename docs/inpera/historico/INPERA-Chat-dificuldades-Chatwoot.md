@@ -1,5 +1,9 @@
 # INPERA Chat / Chatwoot — dificuldades no provisionamento
 
+> **Documento histórico.** Preservado para consulta; os comandos e ambientes
+> descritos abaixo não são a rotina atual de produção. Consulte o
+> [Índice de operação vigente](../README.md) antes de executar procedimentos.
+
 **Data:** 27/07/2026  
 **Ambiente afetado:** Homologação / TDP Informática (`dash.tdpinformatica.com.br` → `app.tdpinformatica.com.br:3001`)  
 **Integração:** INPERA Chat (Chatwoot)  

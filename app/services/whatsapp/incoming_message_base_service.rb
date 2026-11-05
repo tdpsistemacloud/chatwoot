@@ -106,6 +106,11 @@ class Whatsapp::IncomingMessageBaseService
   end
 
   def set_conversation
+    if addressable_identifiers?
+      @conversation = @contact_inbox.reuse_or_create_whatsapp_conversation { ::Conversation.create!(conversation_params) }
+      return
+    end
+
     # Reuse is scoped to the contact inbox that resolved this message, never to the contact. A contact
     # can hold unrelated WhatsApp identities in the same inbox, either from coexistence or from a
     # dashboard merge, and a contact wide lookup cannot tell them apart: it would answer one identity

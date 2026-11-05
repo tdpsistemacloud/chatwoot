@@ -6,8 +6,8 @@ Fontes: `chatwoot/config/routes.rb`, controllers em `platform/api` e `api/v1/acc
 
 Documentação complementar:
 
-- Provisionamento Platform API: [`platform-api-provisionamento-conta-admin.md`](./platform-api-provisionamento-conta-admin.md)
-- Índice de rotas (webhooks incluídos): [`inpera-chat-rotas-api.md`](./inpera-chat-rotas-api.md)
+- Provisionamento Platform API: [`platform-api-provisionamento-conta-admin.md`](platform-api-provisionamento-conta-admin.md)
+- Índice de rotas (webhooks incluídos): [`inpera-chat-rotas-api.md`](inpera-chat-rotas-api.md)
 
 ---
 
@@ -30,7 +30,7 @@ Existem **duas APIs** com tokens diferentes:
 ```
 
 **Base URL produção:** `https://chat.inpera.com.br`  
-**Platform Token (prod):** `FoAVN9hud9Gr3CrU9QYyvYm2` (somente backend)  
+**Platform Token (prod):** `<TOKEN_PLATFORM_APP>` (somente backend)  
 **Evolution API (prod):** `http://129.121.37.112:8080` — mesmo VPS Hostgator (`129.121.37.112`); MacroMind (`192.159.110.58`) descontinuado.  
 Todas as rotas abaixo são relativas à base URL. Respostas em JSON (`format: json`).
 
@@ -68,7 +68,7 @@ Obtido de duas formas (após o user estar vinculado ao Platform App):
 {
   "id": 3,
   "email": "delivery@tdp.com.br",
-  "access_token": "userTok3nDoUsu4rio...",
+  "access_token": "<TOKEN_EXEMPLO>",
   "...": "..."
 }
 ```
@@ -82,7 +82,7 @@ api_access_token: <TOKEN_PLATFORM_APP>
 
 ```json
 {
-  "access_token": "userTok3nDoUsu4rio...",
+  "access_token": "<TOKEN_EXEMPLO>",
   "expiry": null,
   "user": {
     "id": 3,
@@ -182,7 +182,7 @@ Não existe `GET /users?email=...`. Use sempre este `POST`.
 ```json
 {
   "id": 3,
-  "access_token": "userTok3n...",
+  "access_token": "<TOKEN_EXEMPLO>",
   "account_id": null,
   "available_name": "Inpera Delivery",
   "avatar_url": "",

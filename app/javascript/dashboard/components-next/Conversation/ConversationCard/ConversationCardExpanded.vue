@@ -260,6 +260,7 @@ const selectedModel = computed({
         :class="orderClass('time')"
       >
         <TimeAgo
+          :show-created-at="false"
           :conversation-id="chat.id"
           :last-activity-timestamp="chat.timestamp"
           :created-at-timestamp="chat.created_at"

@@ -42,6 +42,7 @@ class ConversationApi extends ApiClient {
       params: {
         page: payload.page,
         sort_by: payload.sortBy,
+        assignee_type: payload.assigneeType,
       },
     });
   }

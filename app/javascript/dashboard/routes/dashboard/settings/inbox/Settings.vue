@@ -100,6 +100,7 @@ export default {
       avatarFile: null,
       avatarUrl: '',
       greetingEnabled: true,
+      greetingEnabledForGroups: false,
       greetingMessage: '',
       emailCollectEnabled: false,
       senderNameType: 'friendly',
@@ -342,7 +343,7 @@ export default {
     canLocktoSingleConversation() {
       return (
         this.isASmsInbox ||
-        this.isAWhatsAppChannel ||
+        (this.isAWhatsAppChannel && this.inbox.provider === 'default') ||
         this.isAFacebookInbox ||
         this.isAPIInbox ||
         this.isAnInstagramChannel ||
@@ -565,6 +566,8 @@ export default {
       this.selectedInboxName = this.inbox.name;
       this.webhookUrl = this.inbox.webhook_url;
       this.greetingEnabled = this.inbox.greeting_enabled || false;
+      this.greetingEnabledForGroups =
+        this.inbox.greeting_enabled_for_groups === true;
       this.greetingMessage = this.inbox.greeting_message || '';
       this.emailCollectEnabled = this.inbox.enable_email_collect;
       this.senderNameType = this.inbox.sender_name_type;
@@ -729,6 +732,19 @@ export default {
         await this.$store.dispatch('inboxes/updateInbox', payload);
         useAlert(this.$t('INBOX_MGMT.EDIT.API.SUCCESS_MESSAGE'));
         this.showBusinessNameInput = false;
+      } catch (error) {
+        useAlert(error.message || this.$t('INBOX_MGMT.EDIT.API.ERROR_MESSAGE'));
+      }
+    },
+    async updateGroupGreeting(enabled) {
+      try {
+        await this.$store.dispatch('inboxes/updateInbox', {
+          id: this.currentInboxId,
+          formData: false,
+          channel: { greeting_enabled_for_groups: enabled },
+        });
+        this.greetingEnabledForGroups = enabled;
+        useAlert(this.$t('INBOX_MGMT.EDIT.API.SUCCESS_MESSAGE'));
       } catch (error) {
         useAlert(error.message || this.$t('INBOX_MGMT.EDIT.API.ERROR_MESSAGE'));
       }
@@ -1327,6 +1343,14 @@ export default {
                   />
                 </template>
               </SettingsToggleSection>
+
+              <SettingsToggleSection
+                v-if="isAWhatsAppChannel && inbox.provider === 'evolution_api'"
+                :model-value="greetingEnabledForGroups"
+                :header="$t('INBOX_MGMT.GROUP_GREETING.LABEL')"
+                :description="$t('INBOX_MGMT.GROUP_GREETING.DESCRIPTION')"
+                @update:model-value="updateGroupGreeting"
+              />
 
               <SettingsToggleSection
                 v-if="isAWebWidgetInbox"

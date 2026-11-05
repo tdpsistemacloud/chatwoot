@@ -2,6 +2,7 @@
 import { onMounted, computed, ref, toRefs } from 'vue';
 import { useTimeoutFn } from '@vueuse/core';
 import { provideMessageContext } from './provider.js';
+import { getDisplayAttachments } from './templateAttachments';
 import { isContactSide } from 'dashboard/store/modules/conversations/helpers';
 import { useTrack } from 'dashboard/composables';
 import { useMapGetter } from 'dashboard/composables/store';
@@ -145,6 +146,10 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['retry']);
+
+const displayAttachments = computed(() =>
+  getDisplayAttachments(props.attachments, props.additionalAttributes)
+);
 
 const contextMenuPosition = ref({});
 const showBackgroundHighlight = ref(false);
@@ -366,8 +371,8 @@ const componentToRender = computed(() => {
     return InstagramStoryBubble;
   }
 
-  if (Array.isArray(props.attachments) && props.attachments.length === 1) {
-    const fileType = props.attachments[0].fileType;
+  if (displayAttachments.value.length === 1) {
+    const fileType = displayAttachments.value[0].fileType;
 
     if (fileType === ATTACHMENT_TYPES.FALLBACK) return FallbackBubble;
 
@@ -420,7 +425,7 @@ const payloadForContextMenu = computed(() => {
 
 const contextMenuEnabledOptions = computed(() => {
   const hasText = !!props.content;
-  const hasAttachments = !!(props.attachments && props.attachments.length > 0);
+  const hasAttachments = displayAttachments.value.length > 0;
 
   const isOutgoing = props.messageType === MESSAGE_TYPES.OUTGOING;
   const isFailedOrProcessing =
@@ -457,7 +462,7 @@ const contextMenuEnabledOptions = computed(() => {
 });
 
 const shouldRenderMessage = computed(() => {
-  const hasAttachments = !!(props.attachments && props.attachments.length > 0);
+  const hasAttachments = displayAttachments.value.length > 0;
   const isEmailContentType = props.contentType === CONTENT_TYPES.INCOMING_EMAIL;
   const isUnsupported = props.contentAttributes?.isUnsupported;
   const isAnIntegrationMessage =
@@ -582,6 +587,7 @@ onMounted(setupHighlightTimer);
 
 provideMessageContext({
   ...toRefs(props),
+  attachments: displayAttachments,
   showingOriginal,
   contactSide,
   isCaptainMessage,

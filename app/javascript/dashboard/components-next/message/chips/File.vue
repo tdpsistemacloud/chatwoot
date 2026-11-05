@@ -6,20 +6,23 @@ import { getFileInfo } from '@chatwoot/utils';
 import FileIcon from 'next/icon/FileIcon.vue';
 import Icon from 'next/icon/Icon.vue';
 
-const { attachment } = defineProps({
+const { attachment, truncateName } = defineProps({
   attachment: {
     type: Object,
     required: true,
   },
+  truncateName: { type: Boolean, default: true },
 });
 
 const { t } = useI18n();
 
 const fileDetails = computed(() => {
-  return getFileInfo(attachment?.dataUrl || '');
+  return getFileInfo(attachment?.fileName || attachment?.dataUrl || '');
 });
 
 const displayFileName = computed(() => {
+  if (!truncateName) return fileDetails.value.name;
+
   const { base, type } = fileDetails.value;
   const truncatedName = (str, maxLength, hasExt) =>
     str.length > maxLength
@@ -61,9 +64,9 @@ const textColorClass = computed(() => {
   >
     <FileIcon class="flex-shrink-0" :file-type="fileDetails.type" />
     <span
-      class="flex-1 min-w-0 text-sm max-w-36"
+      class="flex-1 min-w-0 text-sm truncate"
+      :class="[{ 'max-w-36': truncateName }, textColorClass]"
       :title="fileDetails.name"
-      :class="textColorClass"
     >
       {{ displayFileName }}
     </span>

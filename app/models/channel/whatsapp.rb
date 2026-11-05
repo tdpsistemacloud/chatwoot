@@ -26,7 +26,7 @@ class Channel::Whatsapp < ApplicationRecord
   include Reauthorizable
 
   self.table_name = 'channel_whatsapp'
-  EDITABLE_ATTRS = [:phone_number, :provider, { provider_config: {} }].freeze
+  EDITABLE_ATTRS = [:phone_number, :provider, { provider_config: {} }, :greeting_enabled_for_groups].freeze
   encrypts :business_management_token if Chatwoot.encryption_configured?
 
   # default at the moment is 360dialog lets change later.
@@ -37,10 +37,19 @@ class Channel::Whatsapp < ApplicationRecord
   validates :provider, inclusion: { in: PROVIDERS }
   validates :phone_number, presence: true, uniqueness: true
   validate :validate_provider_config
+  validates :greeting_enabled_for_groups, inclusion: { in: [true, false] }
 
   after_create :sync_templates
   after_update_commit :log_credentials_transfer, if: :saved_change_to_provider_config?
   before_destroy :teardown_webhooks
+
+  def greeting_enabled_for_groups
+    (provider_config || {}).fetch('greeting_enabled_for_groups', false)
+  end
+
+  def greeting_enabled_for_groups=(value)
+    self.provider_config = (provider_config || {}).merge('greeting_enabled_for_groups' => value)
+  end
   after_commit :setup_webhooks, on: :create, if: :should_auto_setup_webhooks?
 
   def name

@@ -1,13 +1,25 @@
 #!/bin/sh
 
-# script prevents pushing to develop and master by mistake
+# Prevent direct pushes to the protected branches defined in AGENTS.md.
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 
-if [ "$branch" = "master" ]; then
-  echo "You can't push directly to master branch"
-  exit 1
-elif [ "$branch" = "develop" ]; then
-  echo "You can't push directly to develop branch"
+is_protected() {
+  case "$1" in
+    inpera_chat|develop|development|main|master) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+if is_protected "$branch"; then
+  echo "You can't push directly from protected branch: $branch" >&2
   exit 1
 fi
+
+# Also reject explicit refspecs that target a protected remote branch.
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  if is_protected "${remote_ref#refs/heads/}"; then
+    echo "You can't push directly to protected branch: $remote_ref" >&2
+    exit 1
+  fi
+done

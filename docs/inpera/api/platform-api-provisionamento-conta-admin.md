@@ -2,9 +2,9 @@
 
 Documentação para integração do **Retaguarda TDP** (`tdpcloud-frontend-react`) com o **INPERA Chat** (Chatwoot self-hosted), usando a **Platform API**.
 
-Rotas completas (Account API, Evolution, webhooks): [inpera-chat-rotas-api.md](./inpera-chat-rotas-api.md)
+Rotas completas (Account API, Evolution, webhooks): [inpera-chat-rotas-api.md](inpera-chat-rotas-api.md)
 
-CRUD detalhado e envio de mensagens: [rotas-crud-usuarios-contas-evolution-mensagens.md](./rotas-crud-usuarios-contas-evolution-mensagens.md)
+CRUD detalhado e envio de mensagens: [rotas-crud-usuarios-contas-evolution-mensagens.md](rotas-crud-usuarios-contas-evolution-mensagens.md)
 
 ---
 
@@ -20,7 +20,7 @@ CRUD detalhado e envio de mensagens: [rotas-crud-usuarios-contas-evolution-mensa
 | **Evolution API (rede Docker)** | `http://evolution:8080` (`EVOLUTION_API_URL` no `.env` do servidor) |
 | **Servidor anterior (MacroMind)** | `192.159.110.58` — **desligado**; containers parados após migração |
 | **Platform App** | `TDP Retaguarda` (ou nome equivalente no Super Admin) |
-| **Platform Access Token** | `FoAVN9hud9Gr3CrU9QYyvYm2` |
+| **Platform Access Token** | `<TOKEN_PLATFORM_APP>` |
 
 > **Segurança:** o Platform Token tem privilégio de criar contas e usuários. Guarde **somente no backend** do TDP (variável de ambiente). Não commitar em repositórios públicos nem expor no React.
 
@@ -59,7 +59,7 @@ Usuários criados pela Platform API **não** são SuperAdmin. Para criar Caixas 
 
 1. Acesse: `https://chat.inpera.com.br/super_admin`
 2. **Platform Apps** → app do Retaguarda (ex.: `TDP Retaguarda`)
-3. Access Token de produção: `FoAVN9hud9Gr3CrU9QYyvYm2`
+3. Access Token de produção: `<TOKEN_PLATFORM_APP>`
 
 Esse token autentica todas as chamadas à Platform API.
 
@@ -70,7 +70,7 @@ Configure no servidor (nunca no frontend React):
 ```env
 # Produção (Hostgator)
 INPERACHAT_BASE_URL=https://chat.inpera.com.br
-INPERACHAT_ACCESSTOKEN=FoAVN9hud9Gr3CrU9QYyvYm2
+INPERACHAT_ACCESSTOKEN=<TOKEN_PLATFORM_APP>
 
 # DEV local (porta 3025) — token é outro (Platform App da instância local)
 # INPERACHAT_BASE_URL=http://192.168.2.36:3025
@@ -81,7 +81,7 @@ Aliases legados (se o backend ainda usar):
 
 ```env
 INPERA_CHAT_BASE_URL=https://chat.inpera.com.br
-INPERA_CHAT_PLATFORM_TOKEN=FoAVN9hud9Gr3CrU9QYyvYm2
+INPERA_CHAT_PLATFORM_TOKEN=<TOKEN_PLATFORM_APP>
 ```
 
 ### 3. Arquitetura recomendada
@@ -106,7 +106,7 @@ O token da Platform API é privilegiado (cria contas e usuários). **Não exponh
 Todas as requisições Platform API devem incluir:
 
 ```http
-api_access_token: FoAVN9hud9Gr3CrU9QYyvYm2
+api_access_token: <TOKEN_PLATFORM_APP>
 Content-Type: application/json
 Accept: application/json
 ```
@@ -151,7 +151,7 @@ Comportamento do backend:
 
 ```http
 POST https://chat.inpera.com.br/platform/api/v1/users
-api_access_token: FoAVN9hud9Gr3CrU9QYyvYm2
+api_access_token: <TOKEN_PLATFORM_APP>
 Content-Type: application/json
 ```
 
@@ -180,7 +180,7 @@ Content-Type: application/json
 ```json
 {
   "id": 3,
-  "access_token": "userTok3nDoUsu4rio...",
+  "access_token": "<TOKEN_EXEMPLO>",
   "name": "Inpera Delivery",
   "display_name": "Inpera",
   "email": "delivery@tdp.com.br",
@@ -202,7 +202,7 @@ Guarde `id` e `access_token` — o token do usuário alimenta a Account API (Evo
 
 ```http
 POST https://chat.inpera.com.br/platform/api/v1/accounts
-api_access_token: FoAVN9hud9Gr3CrU9QYyvYm2
+api_access_token: <TOKEN_PLATFORM_APP>
 Content-Type: application/json
 ```
 
@@ -301,7 +301,7 @@ Sem esta etapa, o usuário **não** terá acesso à conta ou entrará apenas com
 
 ```http
 POST https://chat.inpera.com.br/platform/api/v1/accounts/2/account_users
-api_access_token: FoAVN9hud9Gr3CrU9QYyvYm2
+api_access_token: <TOKEN_PLATFORM_APP>
 Content-Type: application/json
 ```
 
@@ -339,7 +339,7 @@ Retorna uma URL de login único para abrir o INPERA Chat já autenticado.
 
 ```http
 GET https://chat.inpera.com.br/platform/api/v1/users/3/login
-api_access_token: FoAVN9hud9Gr3CrU9QYyvYm2
+api_access_token: <TOKEN_PLATFORM_APP>
 ```
 
 **Response (200):**
@@ -461,7 +461,7 @@ Poll até `state: "open"`. Reconectar: `POST .../evolution/reconnect`.
 
 > `:display_id` na URL de conversa/mensagem é o **número da conversa na conta**, não o ID interno do banco.
 
-Detalhes, erros (`EVOLUTION_DISCONNECTED`, etc.) e cURL completo: [rotas-crud-usuarios-contas-evolution-mensagens.md](./rotas-crud-usuarios-contas-evolution-mensagens.md).
+Detalhes, erros (`EVOLUTION_DISCONNECTED`, etc.) e cURL completo: [rotas-crud-usuarios-contas-evolution-mensagens.md](rotas-crud-usuarios-contas-evolution-mensagens.md).
 
 ---
 
@@ -500,7 +500,7 @@ Base URL produção: `https://chat.inpera.com.br/platform/api/v1`
 
 Documentação OpenAPI completa: `chatwoot/swagger/swagger.json` (seção Platform).
 
-Índice geral de rotas: [inpera-chat-rotas-api.md](./inpera-chat-rotas-api.md).
+Índice geral de rotas: [inpera-chat-rotas-api.md](inpera-chat-rotas-api.md).
 
 ---
 
@@ -508,7 +508,7 @@ Documentação OpenAPI completa: `chatwoot/swagger/swagger.json` (seção Platfo
 
 ```bash
 BASE_URL="https://chat.inpera.com.br"
-TOKEN="FoAVN9hud9Gr3CrU9QYyvYm2"
+TOKEN="<TOKEN_PLATFORM_APP>"
 # 1. Usuário
 USER_JSON=$(curl -s -X POST "$BASE_URL/platform/api/v1/users" \
   -H "api_access_token: $TOKEN" \
@@ -613,7 +613,7 @@ Lista completa e atualizada: `chatwoot/config/features.yml`.
 
 1. **Idempotência parcial:** `POST /users` é idempotente por e-mail. `POST /accounts` **sempre cria** uma conta nova — evite duplicidade no TDP.
 2. **Senha:** obrigatória apenas na criação. Se o usuário já existir, a senha enviada é ignorada.
-3. **Dois tokens:** Platform Token (`FoAVN9hud9Gr3CrU9QYyvYm2`) só na Platform API; User `access_token` na Account API.
+3. **Dois tokens:** Platform Token (`<TOKEN_PLATFORM_APP>`) só na Platform API; User `access_token` na Account API.
 4. **Atualizar features depois:** `PATCH /platform/api/v1/accounts/:id` com o mesmo formato de `features`.
 5. **Promover usuário existente:** `POST /account_users` com `role: "administrator"` atualiza o vínculo se já existir.
 
@@ -624,11 +624,11 @@ Lista completa e atualizada: `chatwoot/config/features.yml`.
 | Ambiente | URL base | Token Platform |
 |----------|----------|----------------|
 | DEV local (porta 3025) | `http://192.168.2.36:3025` | Token do Platform App **local** |
-| **Produção (Hostgator)** | `https://chat.inpera.com.br` | `FoAVN9hud9Gr3CrU9QYyvYm2` |
+| **Produção (Hostgator)** | `https://chat.inpera.com.br` | `<TOKEN_PLATFORM_APP>` |
 
 Cada instância tem seu próprio Platform App e token. Não misture DEV e PROD.
 
-Guia Docker local: [chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md](../chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md)
+Guia Docker local: [chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md](../DEV-LOCAL-PORTA-3025.md)
 
 ---
 
@@ -636,9 +636,9 @@ Guia Docker local: [chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md](../chatwoot/do
 
 | Arquivo | Conteúdo |
 |---------|----------|
-| `temp/inpera-chat-rotas-api.md` | Índice de rotas (Platform, Account, webhooks) |
-| `temp/rotas-crud-usuarios-contas-evolution-mensagens.md` | CRUD e mensagens (detalhado) |
-| `temp/Deploy_Prod.sh` | Deploy produção Hostgator |
+| `docs/inpera/api/inpera-chat-rotas-api.md` | Índice de rotas (Platform, Account, webhooks) |
+| `docs/inpera/api/rotas-crud-usuarios-contas-evolution-mensagens.md` | CRUD e mensagens (detalhado) |
+| `script/Deploy_Prod.sh` | Deploy produção Hostgator |
 | `chatwoot/.env.production.inpera.example` | Variáveis ENV produção |
 | `chatwoot/docker-compose.production.inpera.yml` | Stack Docker produção |
 | `chatwoot/config/routes.rb` | Definição das rotas Platform |

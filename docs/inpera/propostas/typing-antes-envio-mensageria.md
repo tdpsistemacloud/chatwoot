@@ -1,12 +1,16 @@
 # Typing (presence composing) antes do envio WhatsApp — origem Mensageria
 
+> **Proposta / especificação histórica.** Os pedidos e critérios de aceite
+> abaixo não comprovam implementação nem implantação. Para o fluxo de
+> atendimento atual, consulte [ciclo de conversas](../CONVERSATION-LIFECYCLE.md).
+
 Pedido da equipe **Mensageria** para o time **INPERA Chat**.
 
 Objetivo: mitigar banimento de números Evolution (Baileys / WhatsApp Web) quando o disparo vem da mensageria (volume maior que OS/orçamento/delivery “humano”).
 
 A mensageria **não** cria instância Evolution e **não** chama a Evolution API. Continua usando só a Account API do INPERA Chat (mesma inbox `provider: "evolution_api"` já provisionada). Quem deve emitir o “digitando…” é o **INPERA Chat**, na instância que ele já gerencia.
 
-Complementa: [`rotas-crud-usuarios-contas-evolution-mensagens.md`](./rotas-crud-usuarios-contas-evolution-mensagens.md).
+Complementa: [`rotas-crud-usuarios-contas-evolution-mensagens.md`](../api/rotas-crud-usuarios-contas-evolution-mensagens.md).
 
 ---
 

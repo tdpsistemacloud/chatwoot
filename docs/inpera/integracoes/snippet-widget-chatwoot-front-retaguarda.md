@@ -4,8 +4,8 @@ Documentação para o time de **Frontend Retaguarda** (`tdpcloud-frontend-react`
 
 Complementa:
 
-- [`platform-api-provisionamento-conta-admin.md`](./platform-api-provisionamento-conta-admin.md)
-- [`webhook-notificacoes-inpera-chat.md`](./webhook-notificacoes-inpera-chat.md)
+- [`platform-api-provisionamento-conta-admin.md`](../api/platform-api-provisionamento-conta-admin.md)
+- [`webhook-notificacoes-inpera-chat.md`](webhook-notificacoes-inpera-chat.md)
 
 ---
 
@@ -161,7 +161,7 @@ Cliente (WhatsApp, etc.)
   InperaChatAlert + InperaChatModal
 ```
 
-Documentação desse fluxo: [`webhook-notificacoes-inpera-chat.md`](./webhook-notificacoes-inpera-chat.md).
+Documentação desse fluxo: [`webhook-notificacoes-inpera-chat.md`](webhook-notificacoes-inpera-chat.md).
 
 ### O que o menu `linkInperaChat` faz
 
@@ -260,7 +260,7 @@ O `BASE_URL` do snippet deve refletir o ambiente correto:
 
 > O Retaguarda CRA roda em `:3000` — o snippet **nunca** usa a porta 3000 do Retaguarda.
 
-Guia completo de portas DEV: [`chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md`](../chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md)
+Guia completo de portas DEV: [`chatwoot/docs/inpera/DEV-LOCAL-PORTA-3025.md`](../DEV-LOCAL-PORTA-3025.md)
 
 ---
 

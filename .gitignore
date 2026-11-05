@@ -108,10 +108,24 @@ Procfile.worktree
 
 # Graphify (local only)
 graphify-out/
-.gitattributes
 
 .env.docker
 .nodeterm/project.json
 
 # Cache that `rake ruby_llm:refresh_models` writes next to the model registry
 config/llm_models.json.published.json
+
+# Local environments, credentials and generated diagnostics
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.ppk
+/agent-transcripts/
+/.aws/
+/temp/
+*.tar
+*.tar.gz

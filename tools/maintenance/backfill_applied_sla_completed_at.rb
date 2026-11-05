@@ -1,14 +1,14 @@
 # Backfill applied_slas.completed_at from conversation resolution reporting events.
 #
 # Account-scoped dry run:
-#   ACCOUNT_ID=168154 bundle exec rails runner script/backfill_applied_sla_completed_at.rb
+#   ACCOUNT_ID=168154 bundle exec rails runner tools/maintenance/backfill_applied_sla_completed_at.rb
 #
 # Account-scoped apply:
-#   ACCOUNT_ID=168154 APPLY=true bundle exec rails runner script/backfill_applied_sla_completed_at.rb
+#   ACCOUNT_ID=168154 APPLY=true bundle exec rails runner tools/maintenance/backfill_applied_sla_completed_at.rb
 #
 # Explicit global apply with resume controls:
 #   ALL_ACCOUNTS=true APPLY=true BATCH_SIZE=500 AFTER_ID=0 \
-#     bundle exec rails runner script/backfill_applied_sla_completed_at.rb
+#     bundle exec rails runner tools/maintenance/backfill_applied_sla_completed_at.rb
 
 begin
   account_id = Integer(ENV.fetch('ACCOUNT_ID'), 10) if ENV['ACCOUNT_ID'].present?

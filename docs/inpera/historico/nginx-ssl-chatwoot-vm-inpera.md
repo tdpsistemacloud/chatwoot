@@ -1,8 +1,16 @@
 # Nginx + SSL — INPERA Chat na VM `192.159.110.58`
 
+> **Documento histórico.** Preservado para consulta; os comandos e ambientes
+> descritos abaixo não são a rotina atual de produção. Consulte o
+> [Índice de operação vigente](../README.md) antes de executar procedimentos.
+>
+> Os comandos abaixo preservam os caminhos históricos. O instalador atual fica em
+> [script/install_nginx_ssl_inpera_chat.sh](../../../script/install_nginx_ssl_inpera_chat.sh).
+> O deploy atual usa [script/Deploy_Prod.sh](../../../script/Deploy_Prod.sh).
+
 > Este guia descreve o ambiente Macromind anterior. O script de deploy antigo
 > citado abaixo foi removido. O deploy atual no HostGator usa
-> [Deploy_Prod.sh](Deploy_Prod.sh), executado no Git Bash do PC.
+> [Deploy_Prod.sh](../../../script/Deploy_Prod.sh), executado no Git Bash do PC.
 
 Guia para instalar **proxy reverso (Nginx)** e **certificado Let's Encrypt** no servidor do Chatwoot, expondo o app em `https://chat.inpera.com.br`.
 
@@ -384,6 +392,6 @@ sudo CERTBOT_EMAIL="bruno@tdp.com.br,tdp@tdp.com.br" \
 | `docker-compose.production.inpera.yml`    | Stack produção Inpera        |
 | `.env.production.inpera.example`          | Modelo do `.env`             |
 | `deployment/nginx_chatwoot.conf`          | Referência upstream Chatwoot |
-| `temp/comandos-deploy-producao-inpera.md` | Fluxo completo de deploy     |
+| `docs/inpera/historico/comandos-deploy-producao-inpera.md` | Fluxo completo de deploy     |
 
 

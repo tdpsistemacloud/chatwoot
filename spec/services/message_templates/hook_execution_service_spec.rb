@@ -1,6 +1,40 @@
 require 'rails_helper'
 
 describe MessageTemplates::HookExecutionService do
+  context 'with an Evolution group greeting preference' do
+    let(:channel) { create(:channel_whatsapp, provider: 'evolution_api', sync_templates: false, validate_provider_config: false) }
+    let(:inbox) { channel.inbox }
+    let(:contact) { create(:contact, account: inbox.account) }
+    let(:contact_inbox) { create(:contact_inbox, inbox: inbox, contact: contact, source_id: 'EV.120363123456789012') }
+    let(:conversation) { create(:conversation, account: inbox.account, inbox: inbox, contact: contact, contact_inbox: contact_inbox) }
+
+    before do
+      inbox.update!(greeting_enabled: true, greeting_message: 'Welcome', enable_email_collect: false)
+    end
+
+    it 'does not greet a group by default' do
+      create(:message, conversation: conversation, account: inbox.account, message_type: :incoming)
+
+      expect(conversation.messages.template).to be_empty
+      expect(channel.reload.greeting_enabled_for_groups).to be(false)
+    end
+
+    it 'greets a group after opting in and preserves the persisted preference' do
+      channel.update!(greeting_enabled_for_groups: true)
+      create(:message, conversation: conversation, account: inbox.account, message_type: :incoming)
+
+      expect(conversation.messages.template.sole.content).to eq('Welcome')
+      expect(channel.reload.greeting_enabled_for_groups).to be(true)
+    end
+
+    it 'continues to greet direct conversations while the group preference is disabled' do
+      contact_inbox.update!(source_id: '5511888777666')
+      create(:message, conversation: conversation, account: inbox.account, message_type: :incoming)
+
+      expect(conversation.messages.template.sole.content).to eq('Welcome')
+    end
+  end
+
   context 'when there is no incoming message in conversation' do
     it 'will not call any hooks' do
       contact = create(:contact, email: nil)

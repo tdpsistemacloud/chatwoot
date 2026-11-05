@@ -1,5 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
 import ConversationCard from '../ConversationCard.vue';
+import ConversationCardExpanded from 'dashboard/components-next/Conversation/ConversationCard/ConversationCardExpanded.vue';
 
 const defaultChat = {
   id: 1,
@@ -32,6 +33,31 @@ const mountComponent = (chat, currentContact = {}, props = {}) =>
   });
 
 describe('ConversationCard', () => {
+  it.each([
+    ['standard', ConversationCard],
+    ['expanded', ConversationCardExpanded],
+  ])(
+    'shows only last activity in the %s card and updates it',
+    async (_, card) => {
+      const wrapper = shallowMount(card, {
+        props: {
+          chat: { ...defaultChat },
+          currentContact: { name: 'Jane Doe' },
+          inbox: { id: 1 },
+        },
+      });
+      const clock = wrapper.findComponent({ name: 'TimeAgo' });
+      expect(clock.props('showCreatedAt')).toBe(false);
+      expect(clock.props('createdAtTimestamp')).toBe(defaultChat.created_at);
+      await wrapper.setProps({
+        chat: { ...defaultChat, timestamp: 1700000600 },
+      });
+      expect(clock.props('lastActivityTimestamp')).toBe(1700000600);
+      expect(clock.props('createdAtTimestamp')).toBe(defaultChat.created_at);
+      wrapper.unmount();
+    }
+  );
+
   it('does not reserve the labels row when only a persisted SLA policy id is present', () => {
     const wrapper = mountComponent({ sla_policy_id: 1, applied_sla: null });
 

@@ -59,6 +59,13 @@ class ContactInbox < ApplicationRecord
     conversations.last
   end
 
+  def reuse_or_create_whatsapp_conversation
+    with_lock do
+      unresolved = conversations.where.not(status: :resolved).order(last_activity_at: :desc, id: :desc)
+      unresolved.open.first || unresolved.first || yield
+    end
+  end
+
   private
 
   def validate_twilio_source_id

@@ -645,7 +645,7 @@ const actions = {
   // Replaces the list with page 1 of the snake_case filters; sortBy overrides the activity order.
   applyConversationFilters: (
     { commit, dispatch },
-    { filters, sortBy = null }
+    { filters, sortBy = null, assigneeType = 'all' }
   ) => {
     const appliedFilters = filters.map(withTimestampTimezone);
     commit(types.SET_CONVERSATION_FILTERS, appliedFilters);
@@ -655,6 +655,7 @@ const actions = {
 
     return dispatch('fetchFilteredConversations', {
       queryData: filterQueryGenerator(appliedFilters),
+      assigneeType,
       page: 1,
     });
   },
