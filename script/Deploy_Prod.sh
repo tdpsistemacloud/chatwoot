@@ -15,6 +15,11 @@
 #   --only-up          só sobe PDF/rails/sidekiq/report-worker + health (atalho após falha no compose)
 #   --yes / -y         não pede confirmação
 #   --allow-empty-db   segue mesmo com o Postgres vazio/novo (apenas na primeira instalação)
+#   --version=<X.Y.Z|latest>  versão do Chatwoot que este deploy deve publicar.
+#                      "latest" (padrão) usa o VERSION_CW do checkout atual.
+#                      Uma versão específica (4.16.0 ou v4.16.0) exige que o
+#                      VERSION_CW do checkout seja exatamente ela; caso contrário
+#                      aborta antes de parar qualquer serviço.
 #
 # Antes de db:chatwoot_prepare o script faz pg_dump -Fc do banco do Chatwoot (e do
 # Evolution, se existir) em /root/backups/inpera-chat e aborta se o banco estiver
@@ -77,6 +82,12 @@ SKIP_MIGRATION=0
 SKIP_HEALTH=0
 ASSUME_YES=0
 ALLOW_EMPTY_DB=0
+TARGET_VERSION=""
+
+# Versão Chatwoot do checkout (fonte única: VERSION_CW).
+read_checkout_version() {
+  tr -d '[:space:]' < "$REPO_DIR/VERSION_CW"
+}
 
 usage() {
   sed -n '2,22p' "$0"
@@ -97,6 +108,11 @@ for arg in "$@"; do
       ;;
     --yes|-y)          ASSUME_YES=1 ;;
     --allow-empty-db)  ALLOW_EMPTY_DB=1 ;;
+    --version=*)       TARGET_VERSION="${arg#--version=}" ;;
+    --version)
+      echo "--version exige um valor: --version=<X.Y.Z|latest>" >&2
+      exit 1
+      ;;
     -h|--help)
       usage
       exit 0
@@ -249,6 +265,25 @@ REPO_DIR="$(cd -- "$REPO_DIR" && pwd)"
 GIT_SHA="$(git -C "$REPO_DIR" rev-parse HEAD)" || die "Não foi possível ler o commit de $REPO_DIR."
 GIT_BRANCH="$(git -C "$REPO_DIR" branch --show-current)"
 
+# ---------------------------------------------------------------------------
+# Versão do Chatwoot: sempre lida de VERSION_CW, nunca fixada no script.
+# --version=<X.Y.Z|latest> apenas garante que o checkout publica a versão certa.
+# ---------------------------------------------------------------------------
+[[ -f "$REPO_DIR/VERSION_CW" ]] || die "VERSION_CW não encontrado em $REPO_DIR."
+CHATWOOT_VERSION="$(read_checkout_version)"
+[[ "$CHATWOOT_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] \
+  || die "VERSION_CW inválido: '${CHATWOOT_VERSION}'. Esperado X.Y.Z."
+
+if [[ -z "$TARGET_VERSION" || "$TARGET_VERSION" == "latest" ]]; then
+  TARGET_VERSION="$CHATWOOT_VERSION"
+else
+  TARGET_VERSION="${TARGET_VERSION#v}"
+  [[ "$TARGET_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] \
+    || die "Versão inválida: '${TARGET_VERSION}'. Use X.Y.Z, vX.Y.Z ou latest."
+  [[ "$TARGET_VERSION" == "$CHATWOOT_VERSION" ]] \
+    || die "O checkout está em ${CHATWOOT_VERSION}, mas --version pediu ${TARGET_VERSION}. Nada foi alterado. Troque o código para a versão desejada (bash script/sync_upstream_branches.sh v${TARGET_VERSION}) ou rode com --version=${CHATWOOT_VERSION}."
+fi
+
 # HostGator não usa porta 22. -P 22022 e -hostkey são obrigatórios no plink/pscp.
 plink_base() {
   "$PLINK" -ssh -P "$SSH_PORT" -batch -hostkey "$SSH_HOSTKEY" -i "$SSH_KEY" \
@@ -257,6 +292,12 @@ plink_base() {
 
 ssh_vps() {
   plink_base "$@"
+}
+
+# Versão publicada na produção, lida da imagem (funciona com o container parado).
+check_chatwoot_version() {
+  ssh_vps "cd ${REMOTE_DIR} && docker run --rm --entrypoint cat ${IMAGE_NAME} /app/VERSION_CW 2>/dev/null || echo unknown" \
+    | tr -d '\r' | tail -n 1
 }
 
 pscp_to_vps() {
@@ -287,6 +328,8 @@ confirm() {
   echo "  5) migration    $(step_label "$SKIP_MIGRATION")"
   echo "  6) subir app    RODAR"
   echo "  watchdog     stall ${BUILD_STALL_SECS}s / teto ${BUILD_MAX_SECS}s / retries ${BUILD_RETRIES}"
+  echo "  versão       ${CHATWOOT_VERSION} (VERSION_CW)"
+
   if [[ "$ASSUME_YES" == "1" ]]; then
     return 0
   fi
@@ -298,6 +341,17 @@ confirm
 
 log "Validando autenticação SSH com a chave configurada"
 ssh_vps true
+
+log "Verificando versão publicada na produção"
+PROD_VERSION="$(check_chatwoot_version)"
+echo "  produção: ${PROD_VERSION} | checkout: ${CHATWOOT_VERSION}"
+if [[ "$PROD_VERSION" != "$CHATWOOT_VERSION" ]]; then
+  err "A produção está em ${PROD_VERSION} e este deploy publica ${CHATWOOT_VERSION}."
+  err "O banco precisa de db:chatwoot_prepare antes de subir a nova versão."
+  if [[ "$SKIP_MIGRATION" == "1" ]]; then
+    die "--skip-migration não pode ser usado ao trocar de versão (${PROD_VERSION} -> ${CHATWOOT_VERSION}). Nada foi alterado."
+  fi
+fi
 log "Verificando configuração PDF no servidor"
 ssh_vps "set -e; cd ${REMOTE_DIR}; grep -Eq '^PDF_SERVICE_TOKEN=.{32,}$' .env" \
   || die "Configure PDF_SERVICE_TOKEN (openssl rand -hex 32) em ${REMOTE_DIR}/.env antes do deploy."
@@ -391,14 +445,11 @@ else
   log "Checando VPS"
   ssh_vps "df -h /; docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}'; free -h"
 
-  log "Enviando imagens e Compose (antes de parar a aplicação)"
+  log "Enviando imagens (NÃO envia Compose - preserva configuração existente no servidor)"
   pscp_to_vps "${LOCAL_TAR_DIR}/${TAR_NAME}" "${REMOTE_TAR}"
-  pscp_to_vps "$COMPOSE_FILE" "${REMOTE_DIR}/${COMPOSE_FILE}.incoming"
   ssh_vps "set -e
 cd ${REMOTE_DIR}
-docker compose -f ${COMPOSE_FILE}.incoming config --quiet
-docker compose -f ${COMPOSE_FILE}.incoming stop rails sidekiq report-worker pdf
-mv ${COMPOSE_FILE}.incoming ${COMPOSE_FILE}
+docker compose -f ${COMPOSE_FILE} stop rails sidekiq report-worker pdf
 "
 
   log "Carregando imagem no VPS"
