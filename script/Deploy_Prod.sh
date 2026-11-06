@@ -61,8 +61,6 @@ BACKUP_RETENTION_DAYS="14"
 PLINK="${PLINK:-/c/Program Files/PuTTY/plink.exe}"
 PSCP="${PSCP:-/c/Program Files/PuTTY/pscp.exe}"
 DOCKER_DESKTOP="${DOCKER_DESKTOP:-/c/Program Files/Docker/Docker/Docker Desktop.exe}"
-# Sem linha nova no log do build por este tempo → considera travado (assets:precompile pode ficar mudo um bom tempo).
-BUILD_STALL_SECS="${BUILD_STALL_SECS:-120}"
 # O build roda livremente até o teto absoluto (9000s).
 # Sem watchdog de quietude/sem verificar o daemon durante o build, para não interromper
 # builds leves ou que ficam mudos temporariamente (assets:precompile, pnpm i em rede lenta).
@@ -70,10 +68,6 @@ BUILD_STALL_SECS="${BUILD_STALL_SECS:-120}"
 BUILD_MAX_SECS="${BUILD_MAX_SECS:-9000}"
 # Tentativas extras depois de hang / Docker morto (1 = original + 1 retry).
 BUILD_RETRIES="${BUILD_RETRIES:-1}"
-# Apenas para rodar a máquina local com Docker Desktop (RAM/swap limitado) quando o daemon
-# ficar sem resposta em um intervalo de quietude do daemon durante o build — com 12GB/4vCPU
-# no HostGator o daemon raramente quebra o watchdog de 60s.
-BUILD_STALL_SECS="${BUILD_STALL_SECS:-120}"
 
 SKIP_BUILD=0
 SKIP_PACK=0
@@ -218,7 +212,7 @@ run_watched_docker_build() {
   mkdir -p "$(dirname "$logfile")"
   : > "$logfile"
 
-  log "Watchdog: aborta se ficar ${BUILD_STALL_SECS}s sem log novo, se o Docker morrer, ou após ${BUILD_MAX_SECS}s"
+  log "Watchdog: aborta só se o build passar de ${BUILD_MAX_SECS}s"
 
   docker build \
     --platform linux/amd64 \
@@ -230,27 +224,29 @@ run_watched_docker_build() {
   tail -n +1 -f "$logfile" &
   local tail_pid=$!
 
-  local start sz last_sz=0
+  local start
   start=$(date +%s)
-  last_sz=0
 
-  # O build roda livremente até o teto absoluto. Sem watchdogs de quietude nem de daemon
-  # durante a execução, para não interromper builds leves e para não matar builds que
-  # só ficam mudos temporariamente (assets:precompile, pnpm i em rede lenta, etc).
-  # O watchdog de restart do Docker Desktop só rola no início e nos retries finais.
-  while (( $(date +%s) - start < BUILD_MAX_SECS )); do
-    sleep 15
-    sz=$(wc -c < "$logfile" 2>/dev/null | tr -d '[:space:]' || echo 0)
-    if (( sz > last_sz )); then
-      last_sz=$sz
+  # O build roda livremente; o teto absoluto só interrompe um build realmente travado.
+  # Sem watchdogs de quietude nem de daemon durante a execução, para não matar builds
+  # que ficam mudos temporariamente (assets:precompile, pnpm i em rede lenta, etc).
+  while kill -0 "$build_pid" 2>/dev/null; do
+    if (( $(date +%s) - start >= BUILD_MAX_SECS )); then
+      err "Watchdog: estourou ${BUILD_MAX_SECS}s de build (pode indicar ambiente sem RAM/swap adequada, graders lentos ou daemon travado)."
+      stop_pid "$build_pid"
+      stop_pid "$tail_pid"
+      return 2
     fi
+    sleep 5
   done
 
-  # Build atingiu o teto absoluto.
-  err "Watchdog: estourou ${BUILD_MAX_SECS}s de build (pode indicar ambiente sem RAM/swap adequada, graders lentos ou daemon travado)."
-  stop_pid "$build_pid"
+  # O build já terminou: recolhe o código de saída real (0 = ok).
+  local build_rc=0
+  wait "$build_pid" || build_rc=$?
+
+  # Encerra o tail do log para não deixar processo pendurado.
   stop_pid "$tail_pid"
-  return 2
+  return "$build_rc"
 }
 
 [[ -f "$SSH_KEY" ]] || die "Chave SSH não encontrada: $SSH_KEY. Configure SSH_KEY com o caminho do arquivo .ppk."
@@ -327,7 +323,7 @@ confirm() {
   echo "  4) backup DB    $(step_label "$SKIP_MIGRATION")"
   echo "  5) migration    $(step_label "$SKIP_MIGRATION")"
   echo "  6) subir app    RODAR"
-  echo "  watchdog     stall ${BUILD_STALL_SECS}s / teto ${BUILD_MAX_SECS}s / retries ${BUILD_RETRIES}"
+  echo "  watchdog     teto ${BUILD_MAX_SECS}s / retries ${BUILD_RETRIES}"
   echo "  versão       ${CHATWOOT_VERSION} (VERSION_CW)"
 
   if [[ "$ASSUME_YES" == "1" ]]; then
