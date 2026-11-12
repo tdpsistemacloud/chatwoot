@@ -8,6 +8,7 @@
 # Sem flag: build + empacotar + upload + load + backup do banco + preflight + migration + subir + health.
 # Flags só pulam etapa:
 #   --skip-build       não faz docker build (usa chatwoot-inpera:prod local)
+#   --rebuild-pdf      força reconstrução da imagem do PDF mesmo sem alterações
 #   --skip-pack        não faz docker save/gzip (usa o .tar.gz já em /tmp/inpera-deploy)
 #   --skip-upload      não para o VPS nem envia/carrega imagem (já está no servidor)
 #   --skip-migration   não roda backup/preflight nem db:chatwoot_prepare no VPS
@@ -52,6 +53,8 @@ IMAGE_NAME="chatwoot-inpera:prod"
 PDF_IMAGE_NAME="chatwoot-report-pdf:prod"
 TAR_NAME="chatwoot-inpera-prod.tar.gz"
 LOCAL_TAR_DIR="/tmp/inpera-deploy"
+PDF_HASH_FILE="${REPO_DIR}/tmp/.pdf_sources_hash"
+PDF_HASH_FILE_TMP="${LOCAL_TAR_DIR}/.pdf_sources_hash"
 HEALTH_URL="https://chat.inpera.com.br/"
 # Backup de banco antes de cada migration; fica fora dos volumes Docker.
 REMOTE_BACKUP_DIR="/root/backups/inpera-chat"
@@ -70,6 +73,7 @@ BUILD_MAX_SECS="${BUILD_MAX_SECS:-9000}"
 BUILD_RETRIES="${BUILD_RETRIES:-1}"
 
 SKIP_BUILD=0
+REBUILD_PDF=0
 SKIP_PACK=0
 SKIP_UPLOAD=0
 SKIP_MIGRATION=0
@@ -84,12 +88,13 @@ read_checkout_version() {
 }
 
 usage() {
-  sed -n '2,22p' "$0"
+  sed -n '2,24p' "$0"
 }
 
 for arg in "$@"; do
   case "$arg" in
     --skip-build)      SKIP_BUILD=1 ;;
+    --rebuild-pdf|--force-build-pdf) REBUILD_PDF=1 ;;
     --skip-pack)       SKIP_PACK=1 ;;
     --skip-upload)     SKIP_UPLOAD=1 ;;
     --skip-migration)  SKIP_MIGRATION=1 ;;
@@ -303,6 +308,61 @@ pscp_to_vps() {
     "$src" "${SSH_USER}@${SSH_HOST}:${dest}"
 }
 
+compute_pdf_sources_hash() {
+  local hash=""
+  if command -v sha256sum >/dev/null 2>&1; then
+    hash="$(cd "$REPO_DIR" && find docker/pdf app/views/reports/pdf -type f 2>/dev/null | sort | xargs sha256sum 2>/dev/null | sha256sum | awk '{print $1}')"
+  elif command -v md5sum >/dev/null 2>&1; then
+    hash="$(cd "$REPO_DIR" && find docker/pdf app/views/reports/pdf -type f 2>/dev/null | sort | xargs md5sum 2>/dev/null | md5sum | awk '{print $1}')"
+  fi
+  echo "$hash"
+}
+
+should_build_pdf() {
+  local current_hash="$1"
+
+  if [[ "$REBUILD_PDF" == "1" ]]; then
+    return 0
+  fi
+
+  if ! docker image inspect "$PDF_IMAGE_NAME" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  [[ -n "$current_hash" ]] || return 0
+
+  local image_hash
+  image_hash="$(docker image inspect --format '{{ index .Config.Labels "inpera.pdf.sources_hash" }}' "$PDF_IMAGE_NAME" 2>/dev/null || true)"
+  if [[ -n "$image_hash" && "$image_hash" != "<no value>" && "$image_hash" == "$current_hash" ]]; then
+    return 1
+  fi
+
+  if [[ -f "$PDF_HASH_FILE" && "$(cat "$PDF_HASH_FILE" 2>/dev/null)" == "$current_hash" ]]; then
+    return 1
+  fi
+  if [[ -f "$PDF_HASH_FILE_TMP" && "$(cat "$PDF_HASH_FILE_TMP" 2>/dev/null)" == "$current_hash" ]]; then
+    return 1
+  fi
+
+  local uncommitted
+  uncommitted="$(git -C "$REPO_DIR" status --porcelain docker/pdf app/views/reports/pdf 2>/dev/null || true)"
+  if [[ -z "$uncommitted" ]]; then
+    local last_pdf_commit_ts
+    last_pdf_commit_ts="$(git -C "$REPO_DIR" log -1 --format=%ct -- docker/pdf app/views/reports/pdf 2>/dev/null || echo 0)"
+    local img_created_raw
+    img_created_raw="$(docker image inspect --format '{{.Created}}' "$PDF_IMAGE_NAME" 2>/dev/null || true)"
+    if [[ -n "$img_created_raw" ]]; then
+      local img_created_ts
+      img_created_ts="$(date -d "$img_created_raw" +%s 2>/dev/null || echo 0)"
+      if (( img_created_ts >= last_pdf_commit_ts )); then
+        return 1
+      fi
+    fi
+  fi
+
+  return 0
+}
+
 step_label() {
   local skip="$1"
   if [[ "$skip" == "1" ]]; then
@@ -312,12 +372,27 @@ step_label() {
   fi
 }
 
+CURRENT_PDF_HASH="$(compute_pdf_sources_hash)"
+
 confirm() {
+  local pdf_status
+  if [[ "$SKIP_BUILD" == "1" ]]; then
+    pdf_status="PULAR (--skip-build)"
+  elif ! should_build_pdf "$CURRENT_PDF_HASH"; then
+    pdf_status="REAPROVEITAR (sem alterações nos fontes)"
+  elif [[ "$REBUILD_PDF" == "1" ]]; then
+    pdf_status="RODAR (--rebuild-pdf)"
+  else
+    pdf_status="RODAR (alterações detectadas)"
+  fi
+
   echo ""
   echo "Vai atualizar PRODUÇÃO em ${SSH_HOST}"
   echo "  código: $REPO_DIR"
   echo "  branch: $GIT_BRANCH | commit: $GIT_SHA"
   echo "  1) build        $(step_label "$SKIP_BUILD")"
+  echo "     - chatwoot   $(step_label "$SKIP_BUILD")"
+  echo "     - report-pdf ${pdf_status}"
   echo "  2) empacotar    $(step_label "$SKIP_PACK")"
   echo "  3) upload/load  $(step_label "$SKIP_UPLOAD")"
   echo "  4) backup DB    $(step_label "$SKIP_MIGRATION")"
@@ -404,8 +479,31 @@ else
     die "docker build falhou. Veja o log em vermelho acima e $BUILD_LOG"
   done
   [[ "$build_ok" == "1" ]] || die "docker build não concluiu."
-  log "Construindo o serviço PDF com sandbox"
-  docker build --platform linux/amd64 -f docker/pdf/Dockerfile -t "$PDF_IMAGE_NAME" .
+
+  CURRENT_PDF_HASH="$(compute_pdf_sources_hash)"
+  if should_build_pdf "$CURRENT_PDF_HASH"; then
+    if [[ "$REBUILD_PDF" == "1" ]]; then
+      log "Construindo o serviço PDF com sandbox (--rebuild-pdf solicitado)..."
+    elif ! docker image inspect "$PDF_IMAGE_NAME" >/dev/null 2>&1; then
+      log "Imagem $PDF_IMAGE_NAME não encontrada localmente. Construindo serviço PDF..."
+    else
+      log "Alterações detectadas no código do serviço PDF. Construindo $PDF_IMAGE_NAME..."
+    fi
+    docker build --platform linux/amd64 \
+      --label "inpera.pdf.sources_hash=$CURRENT_PDF_HASH" \
+      -f docker/pdf/Dockerfile \
+      -t "$PDF_IMAGE_NAME" .
+    mkdir -p "$LOCAL_TAR_DIR" "${REPO_DIR}/tmp"
+    echo "$CURRENT_PDF_HASH" > "$PDF_HASH_FILE" 2>/dev/null || true
+    echo "$CURRENT_PDF_HASH" > "$PDF_HASH_FILE_TMP" 2>/dev/null || true
+    log "Build do serviço PDF concluído com sucesso."
+  else
+    log "Serviço PDF sem alterações nos fontes (hash: ${CURRENT_PDF_HASH:0:12})."
+    log "PULANDO build do PDF e reutilizando imagem local $PDF_IMAGE_NAME (economia de ~4 min)."
+    mkdir -p "$LOCAL_TAR_DIR" "${REPO_DIR}/tmp"
+    echo "$CURRENT_PDF_HASH" > "$PDF_HASH_FILE" 2>/dev/null || true
+    echo "$CURRENT_PDF_HASH" > "$PDF_HASH_FILE_TMP" 2>/dev/null || true
+  fi
 fi
 
 log "SHA na imagem local"
