@@ -8,6 +8,16 @@ import { getConversationAPI } from '../../api/conversation';
 const state = {
   id: '',
   status: '',
+  queuePosition: null,
+  queueMessage: null,
+};
+
+// Only queue events carry the rendered message; other conversation events must not clear the banner.
+const setQueueAttributes = ($state, data) => {
+  if (!('queue_message' in data)) return;
+
+  $state.queuePosition = data.queue_position;
+  $state.queueMessage = data.queue_message;
 };
 
 export const getters = {
@@ -37,16 +47,20 @@ export const mutations = {
   [SET_CONVERSATION_ATTRIBUTES]($state, data) {
     $state.id = data.id;
     $state.status = data.status;
+    setQueueAttributes($state, data);
   },
   [UPDATE_CONVERSATION_ATTRIBUTES]($state, data) {
     if (data.id === $state.id) {
       $state.id = data.id;
-      $state.status = data.status;
+      if (data.status) $state.status = data.status;
+      setQueueAttributes($state, data);
     }
   },
   [CLEAR_CONVERSATION_ATTRIBUTES]($state) {
     $state.id = '';
     $state.status = '';
+    $state.queuePosition = null;
+    $state.queueMessage = null;
   },
 };
 

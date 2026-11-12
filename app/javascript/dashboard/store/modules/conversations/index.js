@@ -382,6 +382,16 @@ export const mutations = {
     }
   },
 
+  [types.SET_CONVERSATION_QUEUE_POSITION](
+    _state,
+    { conversationId, queuePosition }
+  ) {
+    const chat = _state.allConversations.find(c => c.id === conversationId);
+    if (chat) {
+      chat.queue_position = queuePosition;
+    }
+  },
+
   [types.CLEAR_CONTACT_CONVERSATIONS](_state, contactId) {
     const chats = _state.allConversations.filter(
       c => c.meta.sender.id !== contactId

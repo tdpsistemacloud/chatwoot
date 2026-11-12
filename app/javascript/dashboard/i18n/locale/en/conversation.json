@@ -359,6 +359,12 @@
           "CANCEL": "Cancel"
         }
       },
+      "QUEUE_ORDER": {
+        "TITLE": "Customer is not next in the queue",
+        "MESSAGE": "This customer is #{position} in the queue. {waiting} customer(s) have been waiting longer. Reply anyway?",
+        "CONFIRM": "Reply anyway",
+        "CANCEL": "Cancel"
+      },
       "QUOTED_REPLY": {
         "SHOW_TOOLTIP": "Show trimmed content",
         "HIDE_TOOLTIP": "Hide trimmed content",

@@ -47,6 +47,7 @@ export default {
       description = '',
       name: title = '',
       allow_auto_assign: allowAutoAssign = true,
+      show_queue_position: showQueuePosition = false,
       icon = '',
       icon_color: iconColor = '',
     } = formData;
@@ -55,6 +56,7 @@ export default {
       description,
       title,
       allowAutoAssign,
+      showQueuePosition,
       icon,
       iconColor,
     });
@@ -84,6 +86,7 @@ export default {
         description: this.state.description,
         name: this.state.title,
         allow_auto_assign: this.state.allowAutoAssign,
+        show_queue_position: this.state.showQueuePosition,
         icon: this.state.icon,
         icon_color: this.state.iconColor,
       });
@@ -163,6 +166,16 @@ export default {
         <input v-model="state.allowAutoAssign" type="checkbox" :value="true" />
         <label for="conversation_creation">
           {{ $t('TEAMS_SETTINGS.FORM.AUTO_ASSIGN.LABEL') }}
+        </label>
+      </div>
+      <div class="w-full flex items-center gap-2">
+        <input
+          id="show_queue_position"
+          v-model="state.showQueuePosition"
+          type="checkbox"
+        />
+        <label for="show_queue_position">
+          {{ $t('TEAMS_SETTINGS.FORM.SHOW_QUEUE_POSITION.LABEL') }}
         </label>
       </div>
       <div class="flex flex-row justify-end gap-2 py-2 px-0 w-full">

@@ -113,6 +113,8 @@ export default {
       webhookUrl: '',
       channelWelcomeTitle: '',
       channelWelcomeTagline: '',
+      queueMessageEnabled: false,
+      queueMessage: '',
       selectedFeatureFlags: [],
       replyTime: '',
       selectedTabIndex: 0,
@@ -578,6 +580,8 @@ export default {
       this.channelWebsiteUrl = this.inbox.website_url;
       this.channelWelcomeTitle = this.inbox.welcome_title;
       this.channelWelcomeTagline = this.inbox.welcome_tagline || '';
+      this.queueMessage = this.inbox.queue_message || '';
+      this.queueMessageEnabled = Boolean(this.inbox.queue_message);
       this.selectedFeatureFlags = this.inbox.selected_feature_flags || [];
       this.replyTime = this.inbox.reply_time;
       this.locktoSingleConversation = this.inbox.lock_to_single_conversation;
@@ -706,6 +710,7 @@ export default {
           allow_messages_after_resolved: this.allowMessagesAfterResolved,
           greeting_enabled: this.greetingEnabled,
           greeting_message: this.greetingMessage || '',
+          queue_message: this.queueMessageEnabled ? this.queueMessage : '',
           portal_id: this.selectedPortalSlug
             ? this.portals.find(
                 portal => portal.slug === this.selectedPortalSlug
@@ -1340,6 +1345,23 @@ export default {
                       )
                     "
                     :richtext="!textAreaChannels"
+                  />
+                </template>
+              </SettingsToggleSection>
+
+              <SettingsToggleSection
+                v-if="isAWebWidgetInbox || isAWhatsAppChannel"
+                v-model="queueMessageEnabled"
+                :header="$t('INBOX_MGMT.QUEUE_POSITION.LABEL')"
+                :description="$t('INBOX_MGMT.QUEUE_POSITION.HELP_TEXT')"
+              >
+                <template v-if="queueMessageEnabled" #editor>
+                  <GreetingsEditor
+                    v-model="queueMessage"
+                    :label="$t('INBOX_MGMT.QUEUE_POSITION.MESSAGE_LABEL')"
+                    :placeholder="
+                      $t('INBOX_MGMT.QUEUE_POSITION.MESSAGE_PLACEHOLDER')
+                    "
                   />
                 </template>
               </SettingsToggleSection>

@@ -4,6 +4,12 @@
       "LABEL": "Enviar mensagens de saudação para grupos do WhatsApp",
       "DESCRIPTION": "Permite enviar a saudação da caixa de entrada para grupos do WhatsApp via Evolution. Desativado por padrão. A saudação geral também precisa estar ativada; conversas individuais não são afetadas."
     },
+    "QUEUE_POSITION": {
+      "LABEL": "Mostrar posição na fila ao cliente",
+      "HELP_TEXT": "Depois que a conversa é direcionada a um time com a posição na fila ativada, o cliente vê esta mensagem até a primeira resposta de um atendente: acima do campo de resposta no widget do site, ou como mensagem no WhatsApp a cada mudança de posição. Use {'{{'} conversation.queue_position {'}}'} para a posição. Cada time tem uma única fila, somando suas caixas de entrada.",
+      "MESSAGE_LABEL": "Mensagem da fila",
+      "MESSAGE_PLACEHOLDER": "Você é o {'{{'} conversation.queue_position {'}}'}º da fila. Esta posição é atualizada automaticamente."
+    },
     "HEADER": "Caixas de Entrada",
     "DESCRIPTION": "Um canal é o modo de comunicação que seu cliente escolhe para interagir com você. Uma caixa de entrada é onde você gerencia interações para um canal específico. Pode incluir comunicações de várias fontes, como e-mail, chat ao vivo e mídia social.",
     "LEARN_MORE": "Saiba mais sobre as caixas de entrada",

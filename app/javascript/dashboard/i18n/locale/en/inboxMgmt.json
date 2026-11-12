@@ -4,6 +4,12 @@
       "LABEL": "Send greeting messages to WhatsApp groups",
       "DESCRIPTION": "Allow the inbox greeting in Evolution WhatsApp groups. Disabled by default. The main greeting setting must also be enabled; direct conversations are unaffected."
     },
+    "QUEUE_POSITION": {
+      "LABEL": "Show queue position to the customer",
+      "HELP_TEXT": "After the conversation is routed to a team with queue position enabled, the customer sees this message until the first agent reply: above the reply box in the website widget, or as a WhatsApp message every time the position changes. Use {'{{'} conversation.queue_position {'}}'} for the position. Each team has one queue across its inboxes.",
+      "MESSAGE_LABEL": "Queue message",
+      "MESSAGE_PLACEHOLDER": "You are number {'{{'} conversation.queue_position {'}}'} in the queue. This position updates automatically."
+    },
     "HEADER": "Inboxes",
     "DESCRIPTION": "A channel is the mode of communication your customer chooses to interact with you. An inbox is where you manage interactions for a specific channel. It can include communications from various sources such as email, live chat, and social media.",
     "LEARN_MORE": "Learn more about inboxes",

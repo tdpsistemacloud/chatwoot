@@ -966,6 +966,8 @@ export default {
           });
     },
     async onSendReply() {
+      if (!(await this.confirmQueueOrder())) return;
+
       const undefinedVariables = getUndefinedVariablesInMessage({
         message: this.message,
         variables: this.messageVariables,
@@ -988,6 +990,12 @@ export default {
       } else {
         this.confirmOnSendReply();
       }
+    },
+    confirmQueueOrder() {
+      const position = this.currentChat?.queue_position;
+      if (this.isPrivate || !position || position <= 1) return true;
+
+      return this.$refs.queueOrderDialog.showConfirmation();
     },
     async sendMessage(
       messagePayload,
@@ -1579,6 +1587,19 @@ export default {
       ref="confirmDialog"
       :title="$t('CONVERSATION.REPLYBOX.UNDEFINED_VARIABLES.TITLE')"
       :description="undefinedVariableMessage"
+    />
+
+    <woot-confirm-modal
+      ref="queueOrderDialog"
+      :title="$t('CONVERSATION.REPLYBOX.QUEUE_ORDER.TITLE')"
+      :description="
+        $t('CONVERSATION.REPLYBOX.QUEUE_ORDER.MESSAGE', {
+          position: currentChat.queue_position,
+          waiting: currentChat.queue_position - 1,
+        })
+      "
+      :confirm-label="$t('CONVERSATION.REPLYBOX.QUEUE_ORDER.CONFIRM')"
+      :cancel-label="$t('CONVERSATION.REPLYBOX.QUEUE_ORDER.CANCEL')"
     />
   </div>
 </template>

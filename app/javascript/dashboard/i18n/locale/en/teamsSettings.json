@@ -118,6 +118,9 @@
       "AUTO_ASSIGN": {
         "LABEL": "Allow auto assign for this team."
       },
+      "SHOW_QUEUE_POSITION": {
+        "LABEL": "Show customers their position in this team's queue (website widget and WhatsApp inboxes with a queue message)."
+      },
       "SUBMIT_CREATE": "Create team"
     }
   }

@@ -16,7 +16,7 @@ class Conversations::EventDataPresenter < SimpleDelegator
       unread_count: unread_incoming_messages.count,
       first_reply_created_at: first_reply_created_at,
       priority: priority,
-      waiting_since: waiting_since.to_i,
+      **push_waiting_data,
       **push_timestamps
     }
   end
@@ -47,6 +47,10 @@ class Conversations::EventDataPresenter < SimpleDelegator
       team: team&.push_event_data,
       hmac_verified: contact_inbox&.hmac_verified
     }
+  end
+
+  def push_waiting_data
+    { waiting_since: waiting_since.to_i, queue_position: queue_position }
   end
 
   def push_timestamps

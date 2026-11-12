@@ -19,6 +19,7 @@
 #  lock_to_single_conversation   :boolean          default(FALSE), not null
 #  name                          :string           not null
 #  out_of_office_message         :string
+#  queue_message                 :text
 #  sender_name_type              :integer          default("friendly"), not null
 #  timezone                      :string           default("UTC")
 #  working_hours_enabled         :boolean          default(FALSE)
@@ -141,6 +142,10 @@ class Inbox < ApplicationRecord
 
   def web_widget?
     channel_type == 'Channel::WebWidget'
+  end
+
+  def queue_enabled?
+    (web_widget? || whatsapp?) && queue_message.present?
   end
 
   def api?

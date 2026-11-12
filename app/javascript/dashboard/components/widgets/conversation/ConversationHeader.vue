@@ -8,6 +8,7 @@ import InboxName from '../InboxName.vue';
 import MoreActions from './MoreActions.vue';
 import Avatar from 'next/avatar/Avatar.vue';
 import SLACardLabel from './components/SLACardLabel.vue';
+import QueuePositionBadge from 'dashboard/components-next/Conversation/ConversationCard/QueuePositionBadge.vue';
 import ConversationCallButton from './ConversationCallButton.vue';
 import wootConstants from 'dashboard/constants/globals';
 import { conversationListPageURL } from 'dashboard/helper/URLHelper';
@@ -145,6 +146,10 @@ const copyConversationId = async () => {
             size="14"
             class="text-n-amber-10 my-0 mx-0 min-w-[14px] flex-shrink-0"
             icon="warning"
+          />
+          <QueuePositionBadge
+            v-if="chat.queue_position"
+            :position="chat.queue_position"
           />
         </div>
 

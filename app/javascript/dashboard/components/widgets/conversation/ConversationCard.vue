@@ -9,6 +9,7 @@ import TimeAgo from 'dashboard/components/ui/TimeAgo.vue';
 import CardLabels from './conversationCardComponents/CardLabels.vue';
 import CardPriorityIcon from 'dashboard/components-next/Conversation/ConversationCard/CardPriorityIcon.vue';
 import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard/UnreadBadge.vue';
+import QueuePositionBadge from 'dashboard/components-next/Conversation/ConversationCard/QueuePositionBadge.vue';
 import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
@@ -228,6 +229,11 @@ watch(
         <UnreadBadge
           v-if="hasUnread"
           :count="unreadCount"
+          class="ltr:ml-auto rtl:mr-auto mt-1"
+        />
+        <QueuePositionBadge
+          v-if="chat.queue_position"
+          :position="chat.queue_position"
           class="ltr:ml-auto rtl:mr-auto mt-1"
         />
       </div>

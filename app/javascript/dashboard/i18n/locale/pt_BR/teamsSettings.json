@@ -118,6 +118,9 @@
       "AUTO_ASSIGN": {
         "LABEL": "Permitir atribuição automática para este time."
       },
+      "SHOW_QUEUE_POSITION": {
+        "LABEL": "Mostrar ao cliente a posição na fila deste time (caixas de widget do site e WhatsApp com mensagem de fila)."
+      },
       "SUBMIT_CREATE": "Criar novo time"
     }
   }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_19_143116) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_11_205834) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1016,6 +1016,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_19_143116) do
     t.bigint "assignee_agent_bot_id"
     t.datetime "status_changed_at"
     t.string "ai_assignee_type"
+    t.datetime "queued_at"
+    t.integer "queue_notified_position"
     t.index ["account_id", "display_id"], name: "index_conversations_on_account_id_and_display_id", unique: true
     t.index ["account_id", "id"], name: "index_conversations_on_id_and_account_id"
     t.index ["account_id", "inbox_id", "status", "assignee_id"], name: "conv_acid_inbid_stat_asgnid_idx"
@@ -1357,6 +1359,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_19_143116) do
     t.integer "sender_name_type", default: 0, null: false
     t.string "business_name"
     t.jsonb "csat_config", default: {}, null: false
+    t.text "queue_message"
     t.index ["account_id"], name: "index_inboxes_on_account_id"
     t.index ["channel_id", "channel_type"], name: "index_inboxes_on_channel_id_and_channel_type"
     t.index ["portal_id"], name: "index_inboxes_on_portal_id"
@@ -1723,6 +1726,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_19_143116) do
     t.datetime "updated_at", null: false
     t.string "icon", default: ""
     t.string "icon_color", default: ""
+    t.boolean "show_queue_position", default: false, null: false
     t.index ["account_id"], name: "index_teams_on_account_id"
     t.index ["name", "account_id"], name: "index_teams_on_name_and_account_id", unique: true
   end

@@ -4,6 +4,7 @@ import { getContrastingTextColor } from '@chatwoot/utils';
 import CustomButton from 'shared/components/Button.vue';
 import FooterReplyTo from 'widget/components/FooterReplyTo.vue';
 import ChatInputWrap from 'widget/components/ChatInputWrap.vue';
+import QueuePositionBanner from 'widget/components/QueuePositionBanner.vue';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { sendEmailTranscript } from 'widget/api/conversation';
 import { useRouter } from 'vue-router';
@@ -18,6 +19,7 @@ export default {
     ChatInputWrap,
     CustomButton,
     FooterReplyTo,
+    QueuePositionBanner,
   },
   setup() {
     const router = useRouter();
@@ -52,6 +54,10 @@ export default {
     },
     hasEmail() {
       return this.currentUser && this.currentUser.has_email;
+    },
+    queueMessage() {
+      const { queuePosition, queueMessage } = this.conversationAttributes;
+      return queuePosition ? queueMessage : '';
     },
     hasReplyTo() {
       return (
@@ -143,6 +149,7 @@ export default {
         hasReplyTo,
     }"
   >
+    <QueuePositionBanner v-if="queueMessage" :message="queueMessage" />
     <FooterReplyTo
       v-if="hasReplyTo"
       :in-reply-to="inReplyTo"

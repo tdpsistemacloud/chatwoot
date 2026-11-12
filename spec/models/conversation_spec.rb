@@ -729,6 +729,7 @@ RSpec.describe Conversation do
         created_at: conversation.created_at.to_i,
         updated_at: conversation.updated_at.to_f,
         waiting_since: conversation.waiting_since.to_i,
+        queue_position: nil,
         priority: nil,
         unread_count: 0
       }
@@ -1310,6 +1311,59 @@ RSpec.describe Conversation do
       travel_to(1.hour.from_now) { conversation.update!(priority: :high) }
 
       expect(conversation.reload.status_changed_at).to be_within(1.second).of(original)
+    end
+  end
+
+  describe '#queue_position' do
+    let(:account) { create(:account) }
+    let(:team) { create(:team, account: account, show_queue_position: true) }
+    let(:inbox) { create(:inbox, account: account, queue_message: 'Position {{ conversation.queue_position }}') }
+    let(:other_inbox) { create(:inbox, account: account, queue_message: 'Position {{ conversation.queue_position }}') }
+    let(:conversation) { create(:conversation, account: account, inbox: inbox) }
+    let(:agent) { create(:user, account: account, role: :agent) }
+
+    it 'starts the queue only when the conversation is routed to a team' do
+      expect(conversation.queue_position).to be_nil
+
+      conversation.update!(team: team)
+
+      expect(conversation.queue_position).to eq(1)
+    end
+
+    it 'orders one team queue across inboxes by routing time' do
+      later_arrival = create(:conversation, account: account, inbox: other_inbox)
+      later_arrival.update!(team: team)
+      travel_to(1.minute.from_now) { conversation.update!(team: team) }
+
+      expect([later_arrival.queue_position, conversation.reload.queue_position]).to eq([1, 2])
+    end
+
+    it 'moves a transferred conversation to the end of the new team queue' do
+      other_team = create(:team, account: account, show_queue_position: true)
+      waiting = create(:conversation, account: account, inbox: other_inbox)
+      waiting.update!(team: other_team)
+      conversation.update!(team: team)
+
+      travel_to(1.minute.from_now) { conversation.update!(team: other_team) }
+
+      expect([waiting.queue_position, conversation.reload.queue_position]).to eq([1, 2])
+    end
+
+    it 'ignores replies before routing and leaves the queue on the first human reply after it' do
+      create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: agent)
+      conversation.update!(team: team)
+      expect(conversation.reload.queue_position).to eq(1)
+
+      create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: agent)
+
+      expect(conversation.reload.queue_position).to be_nil
+    end
+
+    it 'is hidden when the team does not show queue position' do
+      conversation.update!(team: create(:team, account: account))
+
+      expect(conversation.queued_at).to be_nil
+      expect(conversation.queue_position).to be_nil
     end
   end
 end

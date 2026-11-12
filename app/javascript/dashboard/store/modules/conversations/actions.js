@@ -574,6 +574,13 @@ const actions = {
     });
   },
 
+  updateConversationQueuePosition({ commit }, { id, queue_position }) {
+    commit(types.SET_CONVERSATION_QUEUE_POSITION, {
+      conversationId: id,
+      queuePosition: queue_position,
+    });
+  },
+
   setChatStatusFilter({ commit }, data) {
     commit(types.CHANGE_CHAT_STATUS_FILTER, data);
   },

@@ -2,35 +2,37 @@
 #
 # Table name: conversations
 #
-#  id                     :integer          not null, primary key
-#  additional_attributes  :jsonb
-#  agent_last_seen_at     :datetime
-#  ai_assignee_type       :string
-#  assignee_last_seen_at  :datetime
-#  cached_label_list      :text
-#  contact_last_seen_at   :datetime
-#  custom_attributes      :jsonb
-#  first_reply_created_at :datetime
-#  identifier             :string
-#  last_activity_at       :datetime         not null
-#  priority               :integer
-#  snoozed_until          :datetime
-#  status                 :integer          default("open"), not null
-#  status_changed_at      :datetime
-#  uuid                   :uuid             not null
-#  waiting_since          :datetime
-#  created_at             :datetime         not null
-#  updated_at             :datetime         not null
-#  account_id             :integer          not null
-#  assignee_agent_bot_id  :bigint
-#  assignee_id            :integer
-#  campaign_id            :bigint
-#  contact_id             :bigint
-#  contact_inbox_id       :bigint
-#  display_id             :integer          not null
-#  inbox_id               :integer          not null
-#  sla_policy_id          :bigint
-#  team_id                :bigint
+#  id                      :integer          not null, primary key
+#  additional_attributes   :jsonb
+#  agent_last_seen_at      :datetime
+#  ai_assignee_type        :string
+#  assignee_last_seen_at   :datetime
+#  cached_label_list       :text
+#  contact_last_seen_at    :datetime
+#  custom_attributes       :jsonb
+#  first_reply_created_at  :datetime
+#  identifier              :string
+#  last_activity_at        :datetime         not null
+#  priority                :integer
+#  queue_notified_position :integer
+#  queued_at               :datetime
+#  snoozed_until           :datetime
+#  status                  :integer          default("open"), not null
+#  status_changed_at       :datetime
+#  uuid                    :uuid             not null
+#  waiting_since           :datetime
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
+#  account_id              :integer          not null
+#  assignee_agent_bot_id   :bigint
+#  assignee_id             :integer
+#  campaign_id             :bigint
+#  contact_id              :bigint
+#  contact_inbox_id        :bigint
+#  display_id              :integer          not null
+#  inbox_id                :integer          not null
+#  sla_policy_id           :bigint
+#  team_id                 :bigint
 #
 # Indexes
 #
@@ -136,6 +138,7 @@ class Conversation < ApplicationRecord
 
   before_save :ensure_snooze_until_reset
   before_save :set_status_changed_at
+  before_save :sync_queue_entry
   before_create :determine_conversation_status
   before_create :ensure_waiting_since
   after_create :mark_contact_as_lead
@@ -241,6 +244,18 @@ class Conversation < ApplicationRecord
     !whatsapp_group? || inbox.channel.greeting_enabled_for_groups
   end
 
+  # Each team has one queue across its inboxes, ordered by routing time, until the first human reply after routing.
+  def queue_position
+    return unless open? && queued_at.present? && queue_eligible?
+
+    queue = account.conversations.open.where(team_id: team_id)
+    queue.where(queued_at: ...queued_at).or(queue.where(queued_at: queued_at, id: ..id)).count
+  end
+
+  def queue_eligible?
+    team&.show_queue_position.present? && inbox.queue_enabled?
+  end
+
   def tweet?
     inbox.inbox_type == 'Twitter' && additional_attributes['type'] == 'tweet'
   end
@@ -285,6 +300,14 @@ class Conversation < ApplicationRecord
     create_activity
     invalidate_filtered_unread_count_conversation
     notify_conversation_updation
+    broadcast_queue_positions
+  end
+
+  def broadcast_queue_positions
+    return unless saved_change_to_queued_at? || saved_change_to_status? || saved_change_to_team_id?
+    return if queued_at.blank? && queued_at_before_last_save.blank?
+
+    Conversations::QueuePositionBroadcastJob.perform_later(self, [team_id_before_last_save, team_id].compact.uniq)
   end
 
   def handle_resolved_status_change
@@ -306,6 +329,13 @@ class Conversation < ApplicationRecord
 
   def ensure_waiting_since
     self.waiting_since = created_at
+  end
+
+  def sync_queue_entry
+    return unless team_id_changed? || status_changed?(from: 'resolved')
+
+    self.queued_at = queue_eligible? ? Time.current : nil
+    self.queue_notified_position = nil
   end
 
   def mark_contact_as_lead

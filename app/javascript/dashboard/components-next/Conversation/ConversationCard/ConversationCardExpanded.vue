@@ -10,6 +10,7 @@ import Avatar from 'next/avatar/Avatar.vue';
 import TimeAgo from 'dashboard/components/ui/TimeAgo.vue';
 import SLACardLabel from 'dashboard/components-next/Conversation/Sla/SLACardLabel.vue';
 import CardStatusIcon from './CardStatusIcon.vue';
+import QueuePositionBadge from './QueuePositionBadge.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 
@@ -254,6 +255,11 @@ const selectedModel = computed({
       >
         <SLACardLabel ref="slaCardLabel" :chat="chat" />
       </div>
+
+      <QueuePositionBadge
+        v-if="chat.queue_position"
+        :position="chat.queue_position"
+      />
 
       <div
         class="flex-shrink-0 w-[4.375rem] text-end"

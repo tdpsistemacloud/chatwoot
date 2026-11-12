@@ -60,6 +60,7 @@ class ActionCableConnector extends BaseActionCableConnector {
       'notification.updated': this.onNotificationUpdated,
       'conversation.read': this.onConversationRead,
       'conversation.updated': this.onConversationUpdated,
+      'conversation.queue_position_updated': this.onQueuePositionUpdated,
       'conversation.unread_count_changed':
         this.onConversationUnreadCountChanged,
       'account.cache_invalidated': this.onCacheInvalidate,
@@ -216,6 +217,10 @@ class ActionCableConnector extends BaseActionCableConnector {
   onConversationUpdated = data => {
     this.app.$store.dispatch('updateConversation', data);
     this.fetchConversationStats();
+  };
+
+  onQueuePositionUpdated = data => {
+    this.app.$store.dispatch('updateConversationQueuePosition', data);
   };
 
   onConversationUnreadCountChanged = () => {

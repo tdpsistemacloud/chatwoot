@@ -339,6 +339,7 @@ class Message < ApplicationRecord
     mark_pending_conversation_as_open_for_human_response
     set_conversation_activity
     dispatch_create_events
+    leave_queue_on_human_response
     send_reply
     execute_message_template_hooks
     update_contact_activity
@@ -398,6 +399,12 @@ class Message < ApplicationRecord
     else
       update_waiting_since
     end
+  end
+
+  def leave_queue_on_human_response
+    return unless human_response? && !private? && conversation.queued_at.present?
+
+    conversation.update(queued_at: nil)
   end
 
   def dispatch_update_event

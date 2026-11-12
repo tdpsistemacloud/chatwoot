@@ -38,7 +38,12 @@ describe('#mutations', () => {
         id: 1,
         status: 'open',
       });
-      expect(state).toEqual({ id: '', status: '' });
+      expect(state).toEqual({
+        id: '',
+        status: '',
+        queuePosition: null,
+        queueMessage: null,
+      });
     });
   });
 });

@@ -357,6 +357,12 @@
           "CANCEL": "Cancelar"
         }
       },
+      "QUEUE_ORDER": {
+        "TITLE": "Cliente não é o próximo da fila",
+        "MESSAGE": "Este cliente é o {position}º da fila. {waiting} cliente(s) aguardam há mais tempo. Responder mesmo assim?",
+        "CONFIRM": "Responder mesmo assim",
+        "CANCEL": "Cancelar"
+      },
       "QUOTED_REPLY": {
         "SHOW_TOOLTIP": "Mostrar conteúdo cortado",
         "HIDE_TOOLTIP": "Ocultar conteúdo cortado",
