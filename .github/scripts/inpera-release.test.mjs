@@ -51,7 +51,7 @@ test('queue update is idempotent and preserves review text', () => {
 });
 
 const dir = mkdtempSync(join(tmpdir(), 'inpera-api-test-'));
-process.env.GITHUB_REPOSITORY = 'ViniciosTDP/chatwoot';
+process.env.GITHUB_REPOSITORY = 'tdpsistemacloud/chatwoot';
 process.env.INPERA_SYNC_RESULT = join(dir, 'result.json');
 delete process.env.INPERA_RELEASE_SLACK_WEBHOOK_URL;
 test.after(() => rmSync(dir, { recursive: true, force: true }));
@@ -108,7 +108,7 @@ function scenario({
               body
             );
           return {
-            html_url: 'https://github.com/ViniciosTDP/chatwoot/issues/7',
+            html_url: 'https://github.com/tdpsistemacloud/chatwoot/issues/7',
           };
         }
         if (path.includes('/releases?')) return [release('v5.0.0')];

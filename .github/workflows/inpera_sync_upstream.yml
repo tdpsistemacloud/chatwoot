@@ -25,7 +25,7 @@ jobs:
   synchronize:
     # The schedule is deliberately gated until manual homologation is complete.
     if: >-
-      github.repository == 'ViniciosTDP/chatwoot' && github.ref == 'refs/heads/inpera_chat' &&
+      github.repository == 'tdpsistemacloud/chatwoot' && github.ref == 'refs/heads/inpera_chat' &&
       (github.event_name == 'workflow_dispatch' || vars.INPERA_SYNC_ENABLED == 'true')
     runs-on: ubuntu-24.04
     timeout-minutes: 30

@@ -4,7 +4,7 @@ import { api, slack } from './inpera-release.mjs';
 if (!process.env.INPERA_RELEASE_SLACK_WEBHOOK_URL) process.exit(0);
 const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
 const repo = process.env.GITHUB_REPOSITORY;
-if (repo !== 'ViniciosTDP/chatwoot')
+if (repo !== 'tdpsistemacloud/chatwoot')
   throw new Error('Notificação restrita ao fork.');
 const isRelease = p =>
   p.base.ref === 'inpera_chat' &&

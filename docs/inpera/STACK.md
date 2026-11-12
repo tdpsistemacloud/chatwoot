@@ -7,7 +7,7 @@ Em conflito, os manifestos vencem este documento.
 ## 1. Identidade e versionamento
 
 - Produto: **INPERA Chat** — fork comunitário do Chatwoot, versão base **4.19.1** (`package.json`).
-- Remotes: `origin` = `https://github.com/ViniciosTDP/chatwoot.git`; `upstream` = `chatwoot/chatwoot`.
+- Remotes: `origin` = `https://github.com/tdpsistemacloud/chatwoot.git`; `upstream` = `chatwoot/chatwoot`.
 - Branch protegida: **`inpera_chat`** (espelha produção). Nunca editar nela, nem em `master`/`main`/`development`.
   Antes de qualquer edição: `git status --short --branch` no repositório correto e troca para branch de trabalho (`feat/`, `fix/`, `create/`).
 - Checkout único: `C:\projetos-inpera\inpera-chat`. Versionar tarefas por branches nesse diretório; não criar worktrees, clones ou cópias adicionais sem pedido explícito do usuário.
@@ -15,15 +15,15 @@ Em conflito, os manifestos vencem este documento.
 
 ## 2. Runtime e ferramentas
 
-| Item | Versão | Fonte |
-|---|---|---|
-| Ruby | 3.4.4 | `.ruby-version` |
-| Rails | 7.2.3.1 | `Gemfile.lock` |
-| Node.js | 24.22.1 (`24.x`) | `.nvmrc`, `package.json#engines` |
-| pnpm | 10.2.0 | `package.json#packageManager` |
+| Item       | Versão                                       | Fonte                                  |
+| ---------- | -------------------------------------------- | -------------------------------------- |
+| Ruby       | 3.4.4                                        | `.ruby-version`                        |
+| Rails      | 7.2.3.1                                      | `Gemfile.lock`                         |
+| Node.js    | 24.22.1 (`24.x`)                             | `.nvmrc`, `package.json#engines`       |
+| pnpm       | 10.2.0                                       | `package.json#packageManager`          |
 | PostgreSQL | 16 (imagem `pgvector/pgvector:pg16` em prod) | `docker-compose.production.inpera.yml` |
-| Redis | servidor 7.x; gem `redis` 5.0.6 | composes, `Gemfile.lock` |
-| Sidekiq | 7.3.10 | `Gemfile.lock` |
+| Redis      | servidor 7.x; gem `redis` 5.0.6              | composes, `Gemfile.lock`               |
+| Sidekiq    | 7.3.10                                       | `Gemfile.lock`                         |
 
 O Node 14 default da máquina Windows **não** atende. Use Node 24 + pnpm 10; Ruby via rbenv (`eval "$(rbenv init -)"`).
 `package.json` usa `packageManager: pnpm@10.2.0` — não gerar `package-lock.json`.
@@ -59,12 +59,12 @@ O Node 14 default da máquina Windows **não** atende. Use Node 24 + pnpm 10; Ru
 
 ## 6. Ambientes e Docker
 
-| Ambiente | Arquivo | Acesso |
-|---|---|---|
-| DEV local | `docker-compose.local.yml` | host `3025` → container `3000`; Postgres `5433`; Redis `6380`; Evolution `8080` |
-| DEV nativo | `Procfile.dev` | Rails `3000`, Sidekiq, Vite |
-| Produção INPERA | `docker-compose.production.inpera.yml` + `.env.production.inpera.example` | `https://chat.inpera.com.br` atrás de Nginx/SSL; serviços `rails`, `sidekiq`, `postgres`, `redis`, `evolution` |
-| VS Code/Codespaces | `.devcontainer/docker-compose.yml` | ambiente de desenvolvimento do editor |
+| Ambiente           | Arquivo                                                                   | Acesso                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| DEV local          | `docker-compose.local.yml`                                                | host `3025` → container `3000`; Postgres `5433`; Redis `6380`; Evolution `8080`                                |
+| DEV nativo         | `Procfile.dev`                                                            | Rails `3000`, Sidekiq, Vite                                                                                    |
+| Produção INPERA    | `docker-compose.production.inpera.yml` + `.env.production.inpera.example` | `https://chat.inpera.com.br` atrás de Nginx/SSL; serviços `rails`, `sidekiq`, `postgres`, `redis`, `evolution` |
+| VS Code/Codespaces | `.devcontainer/docker-compose.yml`                                        | ambiente de desenvolvimento do editor                                                                          |
 
 Detalhes de portas e variáveis: `docs/inpera/DEV-LOCAL-PORTA-3025.md`. Produção só com autorização explícita para a ação concreta.
 

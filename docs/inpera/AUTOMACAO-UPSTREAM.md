@@ -49,19 +49,19 @@ administrativas e a homologação real permanecem pendentes até sua execução.
 
 ## GitHub App e Slack
 
-Criar uma GitHub App privada, instalada **somente em `ViniciosTDP/chatwoot`**.
+Criar uma GitHub App privada, instalada **somente em `tdpsistemacloud/chatwoot`**.
 Conceder permissões de repositório **Contents, Pull requests, Issues e Workflows:
 write**. Workflows permite publicar commits de releases que alterem Actions.
 Metadata read é implícita. Não cadastrar a App na lista de bypass da proteção.
 
 Em Settings → Secrets and variables → Actions:
 
-| Tipo | Nome | Uso |
-|---|---|---|
-| Variable | `INPERA_SYNC_APP_ID` | App ID |
-| Secret | `INPERA_SYNC_APP_PRIVATE_KEY` | Chave privada PEM da App |
-| Secret opcional | `INPERA_RELEASE_SLACK_WEBHOOK_URL` | Webhook do canal técnico |
-| Variable, após homologação | `INPERA_SYNC_ENABLED` | `true` ativa a execução semanal |
+| Tipo                       | Nome                               | Uso                             |
+| -------------------------- | ---------------------------------- | ------------------------------- |
+| Variable                   | `INPERA_SYNC_APP_ID`               | App ID                          |
+| Secret                     | `INPERA_SYNC_APP_PRIVATE_KEY`      | Chave privada PEM da App        |
+| Secret opcional            | `INPERA_RELEASE_SLACK_WEBHOOK_URL` | Webhook do canal técnico        |
+| Variable, após homologação | `INPERA_SYNC_ENABLED`              | `true` ativa a execução semanal |
 
 O webhook é separado da integração de atendimento. Sua ausência desliga avisos.
 Slack indisponível gera aviso no resumo, sem invalidar a sincronização. Mensagens

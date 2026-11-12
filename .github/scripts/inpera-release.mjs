@@ -82,7 +82,7 @@ export function queuedBody(body, tag, url) {
 
 export async function synchronize({ request = api, runSync } = {}) {
   const repo = process.env.GITHUB_REPOSITORY;
-  if (repo !== 'ViniciosTDP/chatwoot')
+  if (repo !== 'tdpsistemacloud/chatwoot')
     throw new Error('Sincronização autorizada somente no fork INPERA.');
   const base = 'inpera_chat';
   const script = process.env.INPERA_SYNC_SCRIPT;
