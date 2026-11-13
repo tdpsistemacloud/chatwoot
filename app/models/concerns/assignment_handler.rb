@@ -13,6 +13,7 @@ module AssignmentHandler
     return unless team_id_changed?
     return if ai_assignee_type.present?
 
+    self.assignee_id = nil unless assignee_id_changed?
     validate_current_assignee_team
     self.assignee ||= find_assignee_from_team
   end

@@ -27,6 +27,10 @@ class ConversationDrop < BaseDrop
     @obj.try(:queue_position)
   end
 
+  def team_name
+    @obj.try(:team).try(:name)
+  end
+
   def custom_attribute
     custom_attributes = @obj.try(:custom_attributes) || {}
     custom_attributes.transform_keys(&:to_s)

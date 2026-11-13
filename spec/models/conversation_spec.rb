@@ -1349,6 +1349,32 @@ RSpec.describe Conversation do
       expect([waiting.queue_position, conversation.reload.queue_position]).to eq([1, 2])
     end
 
+    it 'places an attended and transferred conversation at the end of the new team queue without letting previous agent messages remove it' do
+      other_team = create(:team, account: account, show_queue_position: true)
+      waiting = create(:conversation, account: account, inbox: other_inbox)
+      waiting.update!(team: other_team)
+
+      # Conversation handled in team A
+      conversation.update!(team: team)
+      create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: agent)
+      expect(conversation.reload.queue_position).to be_nil
+
+      # Transferred to other_team
+      travel_to(1.minute.from_now) { conversation.update!(team: other_team) }
+      expect(conversation.reload.queue_position).to eq(2)
+
+      # Previous agent (not in other_team) sends a transfer message - queue position should remain
+      other_agent = create(:user, account: account, role: :agent)
+      create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: other_agent)
+      expect(conversation.reload.queue_position).to eq(2)
+
+      # New team member responds - conversation leaves the queue
+      new_team_agent = create(:user, account: account, role: :agent)
+      TeamMember.create!(team: other_team, user: new_team_agent)
+      create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: new_team_agent)
+      expect(conversation.reload.queue_position).to be_nil
+    end
+
     it 'ignores replies before routing and leaves the queue on the first human reply after it' do
       create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: agent)
       conversation.update!(team: team)

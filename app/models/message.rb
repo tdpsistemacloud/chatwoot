@@ -403,6 +403,7 @@ class Message < ApplicationRecord
 
   def leave_queue_on_human_response
     return unless human_response? && !private? && conversation.queued_at.present?
+    return if conversation.team.present? && sender.is_a?(User) && conversation.team.members.exclude?(sender)
 
     conversation.update(queued_at: nil)
   end
